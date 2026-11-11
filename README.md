@@ -20,6 +20,7 @@ zone and record lives in a local SQLite database behind a FastAPI backend.
 - [Features](#features)
 - [Tech stack](#tech-stack)
 - [Getting started](#getting-started)
+- [Deployment](#deployment)
 - [Running the tests](#running-the-tests)
 - [Architecture](#architecture)
 - [Database schema](#database-schema)
@@ -137,6 +138,67 @@ Frontend settings live in `frontend/.env.local` (see [frontend/.env.example](fro
 
 Stop the backend, delete `backend/data/route53.db`, then run the `alembic upgrade head` and
 `python -m app.db.seed` steps again.
+
+---
+
+## Deployment
+
+The backend runs as a Docker container on [Render](https://render.com) with a small persistent
+disk for the SQLite file. The frontend runs on [Vercel](https://vercel.com). The browser only
+talks to Vercel: its `/api/*` rewrite forwards calls to Render, so the session cookie belongs to
+the Vercel domain and no cross-site cookie or CORS setup is needed. That is also why there is no
+`NEXT_PUBLIC_API_URL` or session secret: the frontend uses relative `/api` paths, and session
+tokens are random values whose hash is stored in the database.
+
+Files involved: [backend/Dockerfile](backend/Dockerfile),
+[backend/start.sh](backend/start.sh) (migrates, seeds the demo data if it is missing, starts
+uvicorn) and [render.yaml](render.yaml).
+
+### 1. Backend on Render
+
+1. Push this repository to GitHub.
+2. Sign in at https://dashboard.render.com (signing in with GitHub is simplest).
+3. Click **New +** → **Blueprint**, connect your GitHub account if asked, and pick the repository.
+4. Render reads `render.yaml` and lists the **route53-clone-api** web service with its 1 GB disk.
+   When it asks for `FRONTEND_ORIGIN`, enter `https://example.invalid` for now (you'll replace it
+   in step 3 below).
+5. Click **Apply**. The `starter` instance type is needed for the disk, so Render asks for a
+   payment method.
+6. Wait for the deploy to show **Live**, then open
+   `https://<your-service>.onrender.com/api/v1/health`. It should return
+   `{"status":"ok","database":"ok"}`. Copy the service URL.
+
+*Free option:* in `render.yaml` change `plan: starter` to `plan: free` and delete the `disk:`
+block. It works the same, but the free service sleeps after 15 idle minutes (the first request
+then takes about a minute), and data is reset to the demo seed on every restart or redeploy.
+
+### 2. Frontend on Vercel
+
+1. Sign in at https://vercel.com (with GitHub).
+2. Click **Add New…** → **Project** and **Import** the repository.
+3. Next to **Root Directory** click **Edit** and choose `frontend`. The framework preset becomes
+   **Next.js** on its own.
+4. Open **Environment Variables** and add:
+
+   | Name | Value |
+   |---|---|
+   | `BACKEND_URL` | the Render URL from step 1.6, without a trailing slash |
+   | `SESSION_COOKIE_NAME` | `r53_session` |
+   | `NEXT_PUBLIC_DEMO_ACCOUNT_ID` | `123456789012` |
+
+   The build stops with a clear error if `BACKEND_URL` is missing.
+5. Click **Deploy** and copy the production URL (`https://<project>.vercel.app`).
+
+### 3. Connect them and check
+
+1. In Render open the service → **Environment**, set `FRONTEND_ORIGIN` to the Vercel URL and
+   save (Render redeploys).
+2. Open the Vercel URL, sign in with `admin` / `admin123`, create a hosted zone and a record.
+3. In Render click **Manual Deploy** → **Deploy latest commit**. When it is live again, reload the
+   Vercel site: the zone and record should still be there.
+
+If you change `BACKEND_URL` later, redeploy the Vercel project: the rewrite target is fixed at
+build time.
 
 ---
 

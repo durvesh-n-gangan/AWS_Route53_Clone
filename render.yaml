@@ -1,0 +1,29 @@
+# Render Blueprint for the backend API (the frontend is deployed on Vercel).
+# Render: New > Blueprint > pick this repository. See README "Deployment".
+services:
+  - type: web
+    name: route53-clone-api
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    # A persistent disk needs a paid instance type; on "free" the SQLite file is reset
+    # whenever the service restarts or redeploys (the demo data is re-seeded on start).
+    plan: starter
+    region: oregon
+    healthCheckPath: /api/v1/health
+    autoDeploy: true
+    disk:
+      name: route53-data
+      mountPath: /var/data
+      sizeGB: 1
+    envVars:
+      - key: DATABASE_URL
+        value: sqlite:////var/data/route53.db
+      - key: COOKIE_SECURE
+        value: "true"
+      - key: SESSION_TTL_HOURS
+        value: "12"
+      # The Vercel URL of the frontend, e.g. https://your-app.vercel.app (set after the
+      # first Vercel deploy). Only needed for direct browser calls such as /docs.
+      - key: FRONTEND_ORIGIN
+        sync: false

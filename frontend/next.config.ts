@@ -2,6 +2,10 @@ import type { NextConfig } from "next";
 
 // Where the FastAPI backend listens. The browser never calls it directly: every
 // /api/* request is proxied through this app, so the session cookie stays first-party.
+if (process.env.VERCEL && !process.env.BACKEND_URL) {
+  // Without it every /api call would go to localhost and the deployed app could not sign in.
+  throw new Error("Set BACKEND_URL in the Vercel project settings (the Render API URL).");
+}
 const backendUrl = (process.env.BACKEND_URL ?? "http://localhost:8000").replace(/\/+$/, "");
 
 const nextConfig: NextConfig = {
