@@ -89,7 +89,7 @@ export function ZonesTable() {
   );
   const [sortingDescending, setSortingDescending] = useState(false);
   const [selectedItems, setSelectedItems] = useState<HostedZoneSummary[]>([]);
-  const [zoneToDelete, setZoneToDelete] = useState<HostedZoneSummary | null>(null);
+  const [zonesToDelete, setZonesToDelete] = useState<HostedZoneSummary[]>([]);
 
   const pageSize = preferences.pageSize ?? 10;
   const sortKey = SORT_KEYS[sortingColumn.sortingField ?? "name"] ?? "name";
@@ -99,7 +99,8 @@ export function ZonesTable() {
   const items = zones.data?.items ?? [];
   const total = zones.data?.total ?? 0;
   const pagesCount = Math.max(1, Math.ceil(total / pageSize));
-  const selected = selectedItems[0];
+  // View details and Edit work on one zone; Delete accepts several (bulk delete).
+  const selected = selectedItems.length === 1 ? selectedItems[0] : undefined;
 
   const resetToFirstPage = () => {
     setPage(1);
@@ -149,13 +150,13 @@ export function ZonesTable() {
         columnDisplay={preferences.contentDisplay}
         loading={zones.isPending}
         loadingText="Loading hosted zones"
-        selectionType="single"
+        selectionType="multi"
         selectedItems={selectedItems}
         onSelectionChange={({ detail }) => setSelectedItems(detail.selectedItems)}
         ariaLabels={{
           selectionGroupLabel: "Hosted zone selection",
           itemSelectionLabel: (_, zone) => `Select ${displayName(zone.name)}`,
-          allItemsSelectionLabel: () => "Select all hosted zones",
+          allItemsSelectionLabel: () => "Select all hosted zones on this page",
         }}
         sortingColumn={sortingColumn}
         sortingDescending={sortingDescending}
@@ -190,7 +191,10 @@ export function ZonesTable() {
                 >
                   Edit
                 </Button>
-                <Button disabled={!selected} onClick={() => setZoneToDelete(selected ?? null)}>
+                <Button
+                  disabled={selectedItems.length === 0}
+                  onClick={() => setZonesToDelete(selectedItems)}
+                >
                   Delete
                 </Button>
                 <Button variant="primary" onClick={() => router.push(ROUTES.createHostedZone)}>
@@ -253,8 +257,8 @@ export function ZonesTable() {
         }
       />
       <DeleteZoneModal
-        zone={zoneToDelete}
-        onDismiss={() => setZoneToDelete(null)}
+        zones={zonesToDelete}
+        onDismiss={() => setZonesToDelete([])}
         onDeleted={() => setSelectedItems([])}
       />
     </>

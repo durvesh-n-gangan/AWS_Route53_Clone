@@ -55,12 +55,13 @@ export function useUpdateZone(id: string) {
   });
 }
 
-export function useDeleteZone() {
+/** Deletes one or more zones through the bulk endpoint; failures come back per zone. */
+export function useDeleteZones() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: zonesApi.remove,
-    onSuccess: (_result, id) => {
-      queryClient.removeQueries({ queryKey: zoneKeys.detail(id) });
+    mutationFn: zonesApi.bulkDelete,
+    onSuccess: (result) => {
+      for (const id of result.deleted) queryClient.removeQueries({ queryKey: zoneKeys.detail(id) });
       return queryClient.invalidateQueries({ queryKey: zoneKeys.lists() });
     },
   });

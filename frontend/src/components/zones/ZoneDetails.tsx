@@ -194,7 +194,7 @@ export function ZoneDetails({ zoneId }: { zoneId: string }) {
         />
       </SpaceBetween>
       <DeleteZoneModal
-        zone={deleting ? zone : null}
+        zones={deleting ? [zone] : []}
         onDismiss={() => setDeleting(false)}
         onDeleted={() => router.push(ROUTES.hostedZones)}
       />

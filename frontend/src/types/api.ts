@@ -118,3 +118,8 @@ export interface RecordListParams {
   page?: number;
   page_size?: number;
 }
+
+export interface BulkDeleteResult {
+  deleted: string[];
+  failed: { id: string; code: string; message: string }[];
+}

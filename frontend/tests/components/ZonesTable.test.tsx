@@ -79,6 +79,16 @@ describe("ZonesTable", () => {
 
     act(() => button("Edit").click());
     expect(router.push).toHaveBeenCalledWith("/route53/v2/hostedzones/ZBBB/edit");
+
+    // With two zones selected only Delete (bulk) stays available.
+    act(() => table.findRowSelectionArea(1)!.click());
+    expect(button("View details").isDisabled()).toBe(true);
+    expect(button("Edit").isDisabled()).toBe(true);
+    expect(button("Delete").isDisabled()).toBe(false);
+
+    act(() => button("Delete").click());
+    const modal = createWrapper(document.body).findModal()!;
+    expect(modal.findHeader().getElement()).toHaveTextContent("Delete 2 hosted zones?");
   });
 
   it("sends the filter text to the API as a search parameter", async () => {

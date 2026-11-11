@@ -47,28 +47,11 @@ export function useUpdateRecord(zoneId: string) {
   });
 }
 
-export interface DeleteRecordsResult {
-  deleted: string[];
-  failed: { id: string; message: string }[];
-}
-
-/** Deletes each record and reports which ones failed (Phase 8 moves this to a bulk API). */
+/** Deletes the selected records through the bulk endpoint; failures come back per record. */
 export function useDeleteRecords(zoneId: string) {
   const invalidate = useInvalidateZoneRecords(zoneId);
   return useMutation({
-    mutationFn: async (ids: string[]): Promise<DeleteRecordsResult> => {
-      const results = await Promise.allSettled(ids.map((id) => recordsApi.remove(zoneId, id)));
-      const result: DeleteRecordsResult = { deleted: [], failed: [] };
-      results.forEach((outcome, index) => {
-        if (outcome.status === "fulfilled") result.deleted.push(ids[index]);
-        else
-          result.failed.push({
-            id: ids[index],
-            message: outcome.reason instanceof Error ? outcome.reason.message : "Delete failed.",
-          });
-      });
-      return result;
-    },
+    mutationFn: (ids: string[]) => recordsApi.bulkDelete(zoneId, ids),
     onSettled: invalidate,
   });
 }

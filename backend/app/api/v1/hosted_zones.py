@@ -5,8 +5,9 @@ from typing import Annotated
 from fastapi import APIRouter, Query, Response, status
 
 from app.core.deps import CurrentUser, DbSession
+from app.core.errors import AppError
 from app.models import HostedZone
-from app.schemas.common import MAX_PAGE_SIZE, Page
+from app.schemas.common import MAX_PAGE_SIZE, BulkDeleteRequest, BulkDeleteResult, BulkFailure, Page
 from app.schemas.hosted_zone import (
     HostedZoneCreate,
     HostedZoneDetail,
@@ -78,6 +79,20 @@ def create_hosted_zone(body: HostedZoneCreate, db: DbSession, user: CurrentUser)
         tags={tag.key: tag.value for tag in body.tags},
     )
     return _detail(db, zone)
+
+
+@router.post("/bulk-delete", response_model=BulkDeleteResult)
+def bulk_delete_hosted_zones(body: BulkDeleteRequest, db: DbSession, user: CurrentUser):
+    """Delete several zones; non-empty or unknown zones are reported, not fatal."""
+    result = BulkDeleteResult(deleted=[], failed=[])
+    for zone_id in dict.fromkeys(body.ids):  # de-duplicate, keep order
+        try:
+            zone_service.delete_zone(db, zone_service.get_zone(db, user, zone_id))
+            result.deleted.append(zone_id)
+        except AppError as exc:
+            db.rollback()
+            result.failed.append(BulkFailure(id=zone_id, code=exc.code, message=exc.message))
+    return result
 
 
 @router.get("/{zone_id}", response_model=HostedZoneDetail)

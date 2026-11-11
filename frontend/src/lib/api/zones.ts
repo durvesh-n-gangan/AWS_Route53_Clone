@@ -1,5 +1,6 @@
 import { apiFetch } from "@/lib/api/client";
 import type {
+  BulkDeleteResult,
   HostedZone,
   HostedZoneCreateInput,
   HostedZoneSummary,
@@ -19,4 +20,6 @@ export const zonesApi = {
   update: (id: string, input: HostedZoneUpdateInput) =>
     apiFetch<HostedZone>(path(id), { method: "PATCH", body: input }),
   remove: (id: string) => apiFetch<void>(path(id), { method: "DELETE" }),
+  bulkDelete: (ids: string[]) =>
+    apiFetch<BulkDeleteResult>("/hostedzones/bulk-delete", { method: "POST", body: { ids } }),
 };

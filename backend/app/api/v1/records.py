@@ -5,7 +5,8 @@ from typing import Annotated
 from fastapi import APIRouter, Query, Response, status
 
 from app.core.deps import CurrentUser, DbSession
-from app.schemas.common import MAX_PAGE_SIZE, Page
+from app.core.errors import AppError
+from app.schemas.common import MAX_PAGE_SIZE, BulkDeleteRequest, BulkDeleteResult, BulkFailure, Page
 from app.schemas.record import (
     RecordCreateRequest,
     RecordCreateResponse,
@@ -54,6 +55,21 @@ def create_records(zone_id: str, body: RecordCreateRequest, db: DbSession, user:
     zone = get_zone(db, user, zone_id)
     created = record_service.create_records(db, zone, body.records)
     return RecordCreateResponse(items=[RecordOut.model_validate(r) for r in created])
+
+
+@router.post("/bulk-delete", response_model=BulkDeleteResult)
+def bulk_delete_records(zone_id: str, body: BulkDeleteRequest, db: DbSession, user: CurrentUser):
+    """Delete several records; default NS/SOA and unknown IDs are reported, not fatal."""
+    zone = get_zone(db, user, zone_id)
+    result = BulkDeleteResult(deleted=[], failed=[])
+    for record_id in dict.fromkeys(body.ids):
+        try:
+            record_service.delete_record(db, record_service.get_record(db, zone, record_id))
+            result.deleted.append(record_id)
+        except AppError as exc:
+            db.rollback()
+            result.failed.append(BulkFailure(id=record_id, code=exc.code, message=exc.message))
+    return result
 
 
 @router.put("/{record_id}", response_model=RecordOut)

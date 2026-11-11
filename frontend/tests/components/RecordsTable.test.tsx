@@ -142,7 +142,8 @@ describe("RecordsTable", () => {
 
   it("deletes the selected records", async () => {
     const fetchMock = api({
-      "DELETE /api/v1/hostedzones/ZREC/records/RWWW": () => new Response(null, { status: 204 }),
+      "POST /api/v1/hostedzones/ZREC/records/bulk-delete": () =>
+        jsonResponse({ deleted: ["RWWW"], failed: [] }),
     });
     const { table } = renderTable();
     await eventually(() => expect(table().findRows()).toHaveLength(3));
@@ -160,8 +161,8 @@ describe("RecordsTable", () => {
 
     await eventually(() =>
       expect(fetchMock).toHaveBeenCalledWith(
-        "/api/v1/hostedzones/ZREC/records/RWWW",
-        expect.objectContaining({ method: "DELETE" }),
+        "/api/v1/hostedzones/ZREC/records/bulk-delete",
+        expect.objectContaining({ method: "POST", body: JSON.stringify({ ids: ["RWWW"] }) }),
       ),
     );
   });

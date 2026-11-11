@@ -1,5 +1,5 @@
 import { apiFetch } from "@/lib/api/client";
-import type { Page, RecordInput, RecordListParams, RecordSet } from "@/types/api";
+import type { BulkDeleteResult, Page, RecordInput, RecordListParams, RecordSet } from "@/types/api";
 
 const base = (zoneId: string) => `/hostedzones/${encodeURIComponent(zoneId)}/records`;
 
@@ -13,6 +13,8 @@ export const recordsApi = {
       method: "PUT",
       body: record,
     }),
+  bulkDelete: (zoneId: string, ids: string[]) =>
+    apiFetch<BulkDeleteResult>(`${base(zoneId)}/bulk-delete`, { method: "POST", body: { ids } }),
   remove: (zoneId: string, recordId: string) =>
     apiFetch<void>(`${base(zoneId)}/${encodeURIComponent(recordId)}`, { method: "DELETE" }),
 };
