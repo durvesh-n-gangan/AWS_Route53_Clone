@@ -1,4 +1,4 @@
-"""BIND import/export (docs/PLAN.md §5.6)."""
+"""BIND zone-file import (preview and commit) and JSON / BIND export."""
 
 import json
 

@@ -1,4 +1,4 @@
-"""Record set API (docs/PLAN.md §5.5)."""
+"""Record set API: create, list, update and delete."""
 
 import pytest
 from fastapi.testclient import TestClient

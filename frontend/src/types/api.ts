@@ -1,4 +1,4 @@
-/** Shapes shared with the FastAPI backend (PROJECT_PLAN.md section 4). */
+/** Shapes shared with the FastAPI backend. */
 
 export interface ApiErrorBody {
   error: {

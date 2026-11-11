@@ -12,7 +12,7 @@ import { useFollow } from "@/lib/useFollow";
 
 /**
  * A plain text mark drawn for this project. The real AWS logo is a trademark and is not
- * used (PROJECT_PLAN.md section 9.2).
+ * used.
  */
 const TEXT_MARK =
   "data:image/svg+xml;utf8," +

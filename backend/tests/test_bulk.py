@@ -1,4 +1,4 @@
-"""Bulk delete endpoints (docs/PLAN.md §5.6)."""
+"""Bulk delete endpoints for hosted zones and records."""
 
 from fastapi.testclient import TestClient
 

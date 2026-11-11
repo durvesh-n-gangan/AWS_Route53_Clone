@@ -1,4 +1,4 @@
-"""Schema rules from PROJECT_PLAN.md section 3, enforced by the database itself."""
+"""Schema rules (unique keys, checks, cascades) enforced by the database itself."""
 
 from datetime import UTC, datetime, timedelta
 

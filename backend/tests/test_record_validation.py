@@ -1,4 +1,4 @@
-"""Per-type record validation matrix (docs/PLAN.md §5.5)."""
+"""Per-type record validation matrix."""
 
 import pytest
 

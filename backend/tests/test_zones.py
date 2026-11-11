@@ -1,4 +1,4 @@
-"""Hosted zone CRUD API (docs/PLAN.md §5.4)."""
+"""Hosted zone CRUD API."""
 
 import re
 from pathlib import Path

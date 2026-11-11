@@ -1,4 +1,4 @@
-"""Mock authentication (docs/PLAN.md §5.2)."""
+"""Mock authentication: login, logout, sessions and route protection."""
 
 import re
 from datetime import timedelta

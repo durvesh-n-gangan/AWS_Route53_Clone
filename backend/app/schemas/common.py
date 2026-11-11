@@ -8,7 +8,7 @@ MAX_PAGE_SIZE = 100
 
 
 class Page(BaseModel, Generic[T]):
-    """Every list endpoint returns this shape (PROJECT_PLAN.md section 4)."""
+    """Every list endpoint returns this shape."""
 
     items: list[T]
     total: int

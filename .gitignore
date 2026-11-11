@@ -52,8 +52,7 @@ playwright/.cache/
 *.swp
 
 # --- Reference screenshots of the real AWS console (local comparison only, never published) ---
-docs/screenshots/reference/*
-!docs/screenshots/reference/README.md
 
 # Assignment and plan PDFs stay local (not published)
 /*.pdf
+

@@ -1,7 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 
 /**
- * Walks through the assignment requirements (docs/ASSIGNMENT.md) one area at a time and saves a
+ * Walks through the assignment requirements one area at a time and saves a
  * screenshot per area as evidence. Run it against the deployed site with
  * `E2E_BASE_URL=<url> npx playwright test e2e/requirements.spec.ts`.
  * Screenshots go to $EVIDENCE_DIR (default test-results/evidence).

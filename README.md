@@ -13,7 +13,7 @@ The backend runs on a free instance that sleeps when idle, so the first sign-in 
 take about a minute, and demo data resets to the seed whenever it restarts.
 **Demo sign-in:** IAM user name `admin`, password `admin123` (account ID `123456789012` is filled in for you)
 
-![Hosted zones list](docs/screenshots/after-hosted-zones.jpg)
+![Hosted zones list](screenshots/after-hosted-zones.jpg)
 
 ---
 
@@ -35,7 +35,7 @@ take about a minute, and demo data resets to the seed whenever it restarts.
 
 ## Features
 
-Every item below maps to a requirement in [docs/ASSIGNMENT.md](docs/ASSIGNMENT.md).
+Every item below maps to a requirement of the assignment.
 
 ### Required
 
@@ -522,11 +522,11 @@ the source line numbers, and the totals `ready`, `skipped`, `errors` and `create
 
 | | |
 |---|---|
-| ![Sign in](docs/screenshots/after-sign-in.jpg) | ![Create hosted zone](docs/screenshots/after-create-hosted-zone.jpg) |
+| ![Sign in](screenshots/after-sign-in.jpg) | ![Create hosted zone](screenshots/after-create-hosted-zone.jpg) |
 | Sign-in page | Create hosted zone |
-| ![Zone details](docs/screenshots/after-zone-details.jpg) | ![Quick create record](docs/screenshots/after-create-record.jpg) |
+| ![Zone details](screenshots/after-zone-details.jpg) | ![Quick create record](screenshots/after-create-record.jpg) |
 | Hosted zone details and records | Quick create record |
-| ![Record split panel](docs/screenshots/after-record-panel.jpg) | ![Hosted zones](docs/screenshots/after-hosted-zones.jpg) |
+| ![Record split panel](screenshots/after-record-panel.jpg) | ![Hosted zones](screenshots/after-hosted-zones.jpg) |
 | Record details in the split panel | Hosted zones list |
 
 ---
