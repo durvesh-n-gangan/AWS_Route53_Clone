@@ -8,7 +8,9 @@ zone and record lives in a local SQLite database behind a FastAPI backend.
 > **Disclaimer:** Educational project. Not affiliated with, endorsed by, or connected to Amazon
 > Web Services. AWS and Route 53 are trademarks of Amazon.com, Inc. or its affiliates.
 
-**Live demo:** TBD (deployment has not been done yet)
+**Live demo:** https://aws-route53-clone-fawn.vercel.app (API: https://route53-clone-api-fldv.onrender.com/docs)
+The backend runs on a free instance that sleeps when idle, so the first sign-in after a pause can
+take about a minute, and demo data resets to the seed whenever it restarts.
 **Demo sign-in:** IAM user name `admin`, password `admin123` (account ID `123456789012` is filled in for you)
 
 ![Hosted zones list](docs/screenshots/after-hosted-zones.jpg)
@@ -219,6 +221,12 @@ cd frontend && npm run lint && npm run typecheck && npm test && npm run build
 
 ```bash
 cd frontend && npm run test:e2e
+```
+
+To run the same journey against a deployed site instead of local servers:
+
+```bash
+cd frontend && E2E_BASE_URL=https://aws-route53-clone-fawn.vercel.app npm run test:e2e
 ```
 
 At the time of writing: 235 backend tests at about 97% coverage, 185 frontend unit and

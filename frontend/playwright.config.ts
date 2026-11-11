@@ -5,23 +5,26 @@ import { defineConfig } from "@playwright/test";
 const BACKEND_PORT = 8001;
 const FRONTEND_PORT = 3100;
 const E2E_DB = "sqlite:///./data/e2e.db";
+// Set E2E_BASE_URL (e.g. the Vercel URL) to test a deployed site instead of local servers.
+const REMOTE_BASE_URL = process.env.E2E_BASE_URL;
 
 export default defineConfig({
   testDir: "./e2e",
   fullyParallel: false,
   workers: 1,
   retries: 0,
-  timeout: 60_000,
-  expect: { timeout: 10_000 },
+  timeout: 120_000,
+  // A sleeping free-tier backend can take about a minute to answer the first request.
+  expect: { timeout: REMOTE_BASE_URL ? 60_000 : 10_000 },
   reporter: [["list"], ["html", { open: "never" }]],
   use: {
-    baseURL: `http://localhost:${FRONTEND_PORT}`,
+    baseURL: REMOTE_BASE_URL ?? `http://localhost:${FRONTEND_PORT}`,
     // Uses the locally installed Google Chrome; set PW_CHANNEL="" to use Playwright's Chromium.
     channel: process.env.PW_CHANNEL ?? "chrome",
     trace: "retain-on-failure",
     screenshot: "only-on-failure",
   },
-  webServer: [
+  webServer: REMOTE_BASE_URL ? [] : [
     {
       command:
         `rm -f data/e2e.db && DATABASE_URL=${E2E_DB} .venv/bin/alembic upgrade head && ` +
