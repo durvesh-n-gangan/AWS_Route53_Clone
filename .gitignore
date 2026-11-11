@@ -1,0 +1,52 @@
+# --- Environment / secrets ---
+.env
+.env.*
+!.env.example
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+
+# --- SQLite ---
+*.db
+*.db-journal
+*.sqlite
+*.sqlite3
+backend/data/*
+!backend/data/.gitkeep
+
+# --- Node / Next.js ---
+node_modules/
+.next/
+out/
+build/
+dist/
+coverage/
+*.tsbuildinfo
+next-env.d.ts
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+.vercel/
+
+# --- Playwright ---
+test-results/
+playwright-report/
+playwright/.cache/
+
+# --- OS / editors ---
+.DS_Store
+.idea/
+.vscode/
+*.swp
