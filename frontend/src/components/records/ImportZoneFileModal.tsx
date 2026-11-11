@@ -186,7 +186,12 @@ function ImportDialog({ zoneId, zoneName, onDismiss }: Omit<ImportZoneFileModalP
                 {
                   id: "status",
                   header: "Status",
-                  cell: (row) => <StatusIndicator type={STATUS[row.status].type}>{STATUS[row.status].label}</StatusIndicator>,
+                  minWidth: 110,
+                  cell: (row) => (
+                    <StatusIndicator type={STATUS[row.status].type} wrapText={false}>
+                      {STATUS[row.status].label}
+                    </StatusIndicator>
+                  ),
                 },
                 { id: "name", header: "Record name", cell: (row) => (row.name ? displayName(row.name) : "-") },
                 { id: "type", header: "Type", cell: (row) => row.type || "-" },
