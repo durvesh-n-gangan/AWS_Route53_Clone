@@ -17,6 +17,7 @@ import { useEffect, useState } from "react";
 import { InfoLink } from "@/components/common/InfoLink";
 import { useShell } from "@/components/layout/ShellContext";
 import { DeleteRecordsModal } from "@/components/records/DeleteRecordsModal";
+import { ImportZoneFileModal } from "@/components/records/ImportZoneFileModal";
 import { RecordPanel } from "@/components/records/RecordPanel";
 import { RecordsHelp } from "@/components/records/recordHelp";
 import { errorMessage } from "@/lib/apiErrors";
@@ -95,6 +96,7 @@ export function RecordsTable({ zone }: { zone: HostedZone }) {
   const [preferences, setPreferences] = useState(DEFAULT_PREFERENCES);
   const [selectedItems, setSelectedItems] = useState<RecordSet[]>([]);
   const [deleting, setDeleting] = useState<RecordSet[]>([]);
+  const [importing, setImporting] = useState(false);
 
   const pageSize = preferences.pageSize ?? 10;
   const records = useRecords(zone.id, {
@@ -209,7 +211,7 @@ export function RecordsTable({ zone }: { zone: HostedZone }) {
                 <Button disabled={selectedItems.length === 0} onClick={() => setDeleting(selectedItems)}>
                   Delete record
                 </Button>
-                <Button disabled>Import zone file</Button>
+                <Button onClick={() => setImporting(true)}>Import zone file</Button>
                 <Button variant="primary" onClick={() => router.push(ROUTES.createRecord(zone.id))}>
                   Create record
                 </Button>
@@ -300,6 +302,12 @@ export function RecordsTable({ zone }: { zone: HostedZone }) {
             }}
           />
         }
+      />
+      <ImportZoneFileModal
+        zoneId={zone.id}
+        zoneName={zone.name}
+        visible={importing}
+        onDismiss={() => setImporting(false)}
       />
       <DeleteRecordsModal
         zoneId={zone.id}

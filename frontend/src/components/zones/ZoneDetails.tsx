@@ -3,6 +3,7 @@
 import Alert from "@cloudscape-design/components/alert";
 import Box from "@cloudscape-design/components/box";
 import Button from "@cloudscape-design/components/button";
+import ButtonDropdown from "@cloudscape-design/components/button-dropdown";
 import ColumnLayout from "@cloudscape-design/components/column-layout";
 import Container from "@cloudscape-design/components/container";
 import ContentLayout from "@cloudscape-design/components/content-layout";
@@ -25,7 +26,9 @@ import { ApiError } from "@/lib/api/client";
 import { errorMessage } from "@/lib/apiErrors";
 import { displayName, formatZoneType, orDash } from "@/lib/format";
 import { ROUTES } from "@/lib/navigation";
+import { downloadZoneExport } from "@/lib/api/zoneFiles";
 import { useZone } from "@/lib/queries/zones";
+import { useFlash } from "@/components/common/FlashProvider";
 import type { HostedZone } from "@/types/api";
 
 function KeyValue({ label, children }: { label: string; children: ReactNode }) {
@@ -119,6 +122,7 @@ export function ZoneDetails({ zoneId }: { zoneId: string }) {
   const zoneQuery = useZone(zoneId);
   const zone = zoneQuery.data;
   const [deleting, setDeleting] = useState(false);
+  const { addFlash } = useFlash();
   useBreadcrumbLabel(zoneId, zone ? displayName(zone.name) : undefined);
 
   if (zoneQuery.isPending) {
@@ -155,6 +159,19 @@ export function ZoneDetails({ zoneId }: { zoneId: string }) {
           actions={
             <SpaceBetween direction="horizontal" size="xs">
               <Button onClick={() => setDeleting(true)}>Delete zone</Button>
+              <ButtonDropdown
+                items={[
+                  { id: "bind", text: "Export as BIND zone file" },
+                  { id: "json", text: "Export as JSON" },
+                ]}
+                onItemClick={({ detail }) =>
+                  downloadZoneExport(zone.id, detail.id as "bind" | "json").catch((error: unknown) =>
+                    addFlash({ type: "error", content: errorMessage(error, "The zone could not be exported.") }),
+                  )
+                }
+              >
+                Export zone file
+              </ButtonDropdown>
               <Button disabled>Test record</Button>
               <Button disabled>Configure query logging</Button>
             </SpaceBetween>

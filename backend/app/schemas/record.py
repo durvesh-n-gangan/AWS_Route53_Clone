@@ -50,3 +50,22 @@ class RecordOut(BaseModel):
 
 class RecordCreateResponse(BaseModel):
     items: list[RecordOut]
+
+
+class ImportRowOut(BaseModel):
+    name: str
+    type: str
+    ttl: int
+    values: list[str]
+    lines: list[int]
+    status: Literal["ready", "skipped", "error"]
+    message: str
+
+
+class ImportResponse(BaseModel):
+    mode: Literal["preview", "commit"]
+    rows: list[ImportRowOut]
+    ready: int
+    skipped: int
+    errors: int
+    created: int = 0

@@ -10,6 +10,7 @@ export type QueryValue = string | number | boolean | null | undefined;
 
 export interface ApiRequestOptions {
   method?: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
+  /** JSON body; a FormData body is sent as multipart instead. */
   body?: unknown;
   query?: Record<string, QueryValue>;
   signal?: AbortSignal;
@@ -56,13 +57,15 @@ async function readJson(response: Response): Promise<unknown> {
 
 export async function apiFetch<T>(path: string, options: ApiRequestOptions = {}): Promise<T> {
   const { method = "GET", body, query, signal } = options;
+  const isForm = typeof FormData !== "undefined" && body instanceof FormData;
   let response: Response;
   try {
     response = await fetch(buildUrl(path, query), {
       method,
       credentials: "include",
-      headers: body === undefined ? undefined : { "Content-Type": "application/json" },
-      body: body === undefined ? undefined : JSON.stringify(body),
+      // For FormData the browser sets the multipart Content-Type (with its boundary) itself.
+      headers: body === undefined || isForm ? undefined : { "Content-Type": "application/json" },
+      body: body === undefined ? undefined : isForm ? (body as FormData) : JSON.stringify(body),
       signal,
     });
   } catch (cause) {

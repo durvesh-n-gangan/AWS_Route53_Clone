@@ -123,3 +123,22 @@ export interface BulkDeleteResult {
   deleted: string[];
   failed: { id: string; code: string; message: string }[];
 }
+
+export interface ImportRow {
+  name: string;
+  type: string;
+  ttl: number;
+  values: string[];
+  lines: number[];
+  status: "ready" | "skipped" | "error";
+  message: string;
+}
+
+export interface ImportResult {
+  mode: "preview" | "commit";
+  rows: ImportRow[];
+  ready: number;
+  skipped: number;
+  errors: number;
+  created: number;
+}
