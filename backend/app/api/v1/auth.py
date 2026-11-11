@@ -5,6 +5,7 @@ from fastapi import APIRouter, Request, Response, status
 from app.core.config import Settings
 from app.core.deps import AppSettings, CurrentUser, DbSession
 from app.core.errors import AppError
+from app.core.rate_limit import LoginThrottle
 from app.schemas.auth import LoginRequest, MeResponse
 from app.services.auth import authenticate, create_session, end_session
 
@@ -12,6 +13,7 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 
 # Same wording for an unknown user and a wrong password, so accounts can't be probed.
 INVALID_CREDENTIALS = "Your authentication information is incorrect. Please try again."
+TOO_MANY_ATTEMPTS = "Too many failed sign-in attempts. Wait a few minutes, then try again."
 
 
 def _set_session_cookie(response: Response, settings: Settings, token: str) -> None:
@@ -27,10 +29,22 @@ def _set_session_cookie(response: Response, settings: Settings, token: str) -> N
 
 
 @router.post("/login", response_model=MeResponse)
-def login(body: LoginRequest, response: Response, db: DbSession, settings: AppSettings):
+def login(
+    body: LoginRequest,
+    request: Request,
+    response: Response,
+    db: DbSession,
+    settings: AppSettings,
+):
+    throttle: LoginThrottle = request.app.state.login_throttle
+    client_ip = request.client.host if request.client else "unknown"
+    if throttle.is_blocked(client_ip, body.username):
+        raise AppError("Throttling", TOO_MANY_ATTEMPTS, status.HTTP_429_TOO_MANY_REQUESTS)
     user = authenticate(db, body.username, body.password)
     if user is None:
+        throttle.record_failure(client_ip, body.username)
         raise AppError("Unauthenticated", INVALID_CREDENTIALS, status.HTTP_401_UNAUTHORIZED)
+    throttle.reset(client_ip, body.username)
     token = create_session(db, user, settings.session_ttl_hours)
     db.commit()
     _set_session_cookie(response, settings, token)

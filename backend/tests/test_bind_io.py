@@ -167,3 +167,45 @@ def test_json_export(auth_client: TestClient, zone: dict) -> None:
 
 def test_export_unknown_zone_is_404(auth_client: TestClient) -> None:
     assert auth_client.get(f"{ZONES}/ZNOPE/export").status_code == 404
+
+
+def test_lines_with_only_parentheses_are_ignored(auth_client: TestClient, zone: dict) -> None:
+    text = "$ORIGIN example.com.\n(\n)\nwww 300 IN A 192.0.2.7\n)\n"
+
+    response = _import(auth_client, zone, text)
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["ready"] == 1
+    assert body["errors"] == 0
+
+
+def test_commit_race_hits_unique_constraint_as_409(
+    auth_client: TestClient, zone: dict, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from app.services import bind_io
+
+    assert _import(auth_client, zone, "www 300 IN A 192.0.2.7\n", "commit").status_code == 200
+    monkeypatch.setattr(bind_io, "check_conflicts", lambda *args, **kwargs: None)
+
+    response = _import(auth_client, zone, "www 300 IN A 192.0.2.8\n", "commit")
+
+    assert response.status_code == 409
+    assert response.json()["error"]["code"] == "InvalidChangeBatch"
+
+
+def test_text_field_over_the_size_limit_is_rejected(auth_client: TestClient, zone: dict) -> None:
+    from app.services import bind_io
+
+    response = _import(auth_client, zone, "x" * (bind_io.MAX_IMPORT_BYTES + 1))
+
+    assert response.status_code == 422
+
+
+def test_import_endpoint_is_a_sync_handler() -> None:
+    """Parsing and DB work must run in the threadpool, not on the event loop."""
+    import inspect
+
+    from app.api.v1.zone_files import import_zone_file
+
+    assert not inspect.iscoroutinefunction(import_zone_file)

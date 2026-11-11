@@ -1,9 +1,9 @@
 import createWrapper from "@cloudscape-design/components/test-utils/dom";
-import { act, render } from "@testing-library/react";
+import { act, fireEvent, render } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { Providers } from "@/app/providers";
-import { ImportZoneFileModal } from "@/components/records/ImportZoneFileModal";
+import { ImportZoneFileModal, MAX_ZONE_FILE_BYTES } from "@/components/records/ImportZoneFileModal";
 import type { ImportResult } from "@/types/api";
 
 import { eventually } from "../utils/eventually";
@@ -85,5 +85,30 @@ describe("ImportZoneFileModal", () => {
     await eventually(() =>
       expect(modal.findContent().findAlert()!.getElement()).toHaveTextContent("The zone file is empty."),
     );
+  });
+
+  it("refuses pasted text over 1 MB before calling the API", () => {
+    const fetchMock = mockApi({});
+    const { modal, footerButton } = renderModal();
+
+    act(() => modal.findContent().findTextarea()!.setTextareaValue("x".repeat(MAX_ZONE_FILE_BYTES + 1)));
+
+    expect(footerButton("Preview").isDisabled()).toBe(true);
+    expect(modal.findContent().getElement()).toHaveTextContent("The zone file can be up to 1 MB.");
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("refuses an uploaded file over 1 MB", () => {
+    mockApi({});
+    const { modal, footerButton } = renderModal();
+    const big = new File(["x".repeat(MAX_ZONE_FILE_BYTES + 1)], "big.zone", { type: "text/plain" });
+
+    const input = modal.findContent().findFileUpload()!.findNativeInput().getElement();
+    act(() => {
+      fireEvent.change(input, { target: { files: [big] } });
+    });
+
+    expect(footerButton("Preview").isDisabled()).toBe(true);
+    expect(modal.findContent().getElement()).toHaveTextContent("The zone file can be up to 1 MB.");
   });
 });

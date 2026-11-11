@@ -10,6 +10,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.api.v1.router import api_router
 from app.core.config import Settings, get_settings
 from app.core.errors import register_exception_handlers
+from app.core.rate_limit import LoginThrottle
 
 API_PREFIX = "/api/v1"
 
@@ -37,6 +38,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         lifespan=lifespan,
     )
     app.state.settings = settings
+    app.state.login_throttle = LoginThrottle(
+        settings.login_max_failures, settings.login_window_seconds
+    )
     app.add_middleware(
         CORSMiddleware,
         allow_origins=settings.cors_origins,

@@ -24,6 +24,9 @@ class Settings(BaseSettings):
     cookie_name: str = "r53_session"
     cookie_secure: bool = False
     seed_on_start: bool = False
+    # Failed sign-ins allowed per client IP and username inside the window before a 429.
+    login_max_failures: int = 5
+    login_window_seconds: int = 300
 
     @field_validator("database_url")
     @classmethod

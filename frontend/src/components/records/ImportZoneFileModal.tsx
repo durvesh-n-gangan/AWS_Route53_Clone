@@ -33,6 +33,10 @@ www   IN  A     192.0.2.10
 @     IN  MX    10 mail.example.com.
 @     IN  TXT   "v=spf1 mx -all"`;
 
+/** Same limit as the API (bind_io.MAX_IMPORT_BYTES). */
+export const MAX_ZONE_FILE_BYTES = 1_000_000;
+const TOO_LARGE = "The zone file can be up to 1 MB.";
+
 interface ImportZoneFileModalProps {
   zoneId: string;
   zoneName: string;
@@ -52,7 +56,10 @@ function ImportDialog({ zoneId, zoneName, onDismiss }: Omit<ImportZoneFileModalP
   const [files, setFiles] = useState<File[]>([]);
   const [preview, setPreview] = useState<ImportResult | null>(null);
 
-  const source: ZoneFileSource | null = files[0] ? { file: files[0] } : text.trim() ? { text } : null;
+  const fileTooLarge = (files[0]?.size ?? 0) > MAX_ZONE_FILE_BYTES;
+  const textTooLarge = !files[0] && new TextEncoder().encode(text).length > MAX_ZONE_FILE_BYTES;
+  const source: ZoneFileSource | null =
+    fileTooLarge || textTooLarge ? null : files[0] ? { file: files[0] } : text.trim() ? { text } : null;
 
   const previewMutation = useMutation({
     mutationFn: (src: ZoneFileSource) => zoneFilesApi.importZoneFile(zoneId, src, "preview"),
@@ -130,7 +137,7 @@ function ImportDialog({ zoneId, zoneName, onDismiss }: Omit<ImportZoneFileModalP
         )}
         {!preview ? (
           <>
-            <FormField label="Zone file" stretch>
+            <FormField label="Zone file" stretch errorText={textTooLarge ? TOO_LARGE : undefined}>
               <Textarea
                 value={text}
                 rows={10}
@@ -140,7 +147,11 @@ function ImportDialog({ zoneId, zoneName, onDismiss }: Omit<ImportZoneFileModalP
                 onChange={({ detail }) => setText(detail.value)}
               />
             </FormField>
-            <FormField label="Or upload a file" constraintText="Plain text zone file, up to 1 MB.">
+            <FormField
+              label="Or upload a file"
+              constraintText="Plain text zone file, up to 1 MB."
+              errorText={fileTooLarge ? TOO_LARGE : undefined}
+            >
               <FileUpload
                 value={files}
                 accept=".zone,.txt,.db,text/plain"
@@ -185,8 +196,8 @@ function ImportDialog({ zoneId, zoneName, onDismiss }: Omit<ImportZoneFileModalP
                   header: "Value",
                   cell: (row) => (
                     <div>
-                      {row.values.map((value) => (
-                        <div key={value}>{value}</div>
+                      {row.values.map((value, index) => (
+                        <div key={`${index}-${value}`}>{value}</div>
                       ))}
                     </div>
                   ),

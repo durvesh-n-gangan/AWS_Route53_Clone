@@ -20,7 +20,23 @@ describe("safeRedirectTarget", () => {
     ["javascript:alert(1)"],
     ["/login"],
     ["/login?redirect=/x"],
+    ["/\t/evil.example"],
+    ["/\n/evil.example"],
+    ["/\u0000/evil.example"],
+    ["/\u007f"],
   ])("falls back to hosted zones for %s", (input) => {
     expect(safeRedirectTarget(input)).toBe(DEFAULT_SIGNED_IN_PATH);
+  });
+
+  it("rejects a tab that arrives percent-encoded in the query string", () => {
+    const value = new URLSearchParams("redirect=/%09/evil.example").get("redirect");
+    expect(safeRedirectTarget(value)).toBe(DEFAULT_SIGNED_IN_PATH);
+  });
+
+  it("normalises dot segments but stays on the same site", () => {
+    expect(safeRedirectTarget("/route53/../route53/v2/hostedzones")).toBe(
+      "/route53/v2/hostedzones",
+    );
+    expect(safeRedirectTarget("/x/../login")).toBe(DEFAULT_SIGNED_IN_PATH);
   });
 });

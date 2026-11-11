@@ -336,3 +336,36 @@ def test_zone_can_be_deleted_after_its_records_are_removed(
     auth_client.delete(f"{_records_url(zone)}/{created['id']}")
 
     assert auth_client.delete(f"{ZONES}/{zone['id']}").status_code == 204
+
+
+# --- races that slip past the conflict check -------------------------------------------
+
+
+def test_create_race_hits_unique_constraint_as_409(
+    auth_client: TestClient, zone: dict, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Two identical requests can both pass the pre-check; the DB constraint must give a 409."""
+    from app.services import records as records_service
+
+    assert _create(auth_client, zone, _record("www")).status_code == 201
+    monkeypatch.setattr(records_service, "_existing_keys", lambda *args, **kwargs: [])
+
+    response = _create(auth_client, zone, _record("www"))
+
+    assert response.status_code == 409
+    assert response.json()["error"]["code"] == "InvalidChangeBatch"
+    assert _zone_record_count(auth_client, zone) == 3  # session still usable afterwards
+
+
+def test_update_race_hits_unique_constraint_as_409(
+    auth_client: TestClient, zone: dict, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from app.services import records as records_service
+
+    items = _create(auth_client, zone, _record("a"), _record("b")).json()["items"]
+    monkeypatch.setattr(records_service, "_existing_keys", lambda *args, **kwargs: [])
+
+    response = auth_client.put(f"{_records_url(zone)}/{items[1]['id']}", json=_record("a"))
+
+    assert response.status_code == 409
+    assert _first(auth_client, zone, "A")["name"] == "a.example.com."

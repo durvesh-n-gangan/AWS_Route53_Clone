@@ -177,3 +177,48 @@ def test_every_non_public_api_route_requires_a_session(app: FastAPI, client: Tes
         response = client.request(method, path)
         assert response.status_code == 401, f"{method} {path} returned {response.status_code}"
         assert response.json()["error"]["code"] == "Unauthenticated"
+
+
+# --- sign-in throttling ------------------------------------------------------------------
+
+
+def test_repeated_failed_logins_are_throttled(client: TestClient, user: User) -> None:
+    for _ in range(5):
+        assert _login(client, password="wrong").status_code == 401
+
+    blocked = _login(client)  # even the right password is refused while blocked
+
+    assert blocked.status_code == 429
+    assert blocked.json()["error"]["code"] == "Throttling"
+
+
+def test_throttle_is_per_username(client: TestClient, user: User) -> None:
+    for _ in range(5):
+        _login(client, username="someone-else", password="wrong")
+
+    assert _login(client).status_code == 200
+
+
+def test_successful_login_resets_the_failure_count(client: TestClient, user: User) -> None:
+    for _ in range(4):
+        _login(client, password="wrong")
+    assert _login(client).status_code == 200
+
+    for _ in range(4):
+        assert _login(client, password="wrong").status_code == 401
+    assert _login(client).status_code == 200
+
+
+def test_throttle_window_expires() -> None:
+    from app.core.rate_limit import LoginThrottle
+
+    now = [1000.0]
+    throttle = LoginThrottle(max_failures=2, window_seconds=60, clock=lambda: now[0])
+    throttle.record_failure("1.2.3.4", "Admin")
+    throttle.record_failure("1.2.3.4", "admin")
+    assert throttle.is_blocked("1.2.3.4", "ADMIN")
+    assert not throttle.is_blocked("5.6.7.8", "admin")
+
+    now[0] += 61
+
+    assert not throttle.is_blocked("1.2.3.4", "admin")

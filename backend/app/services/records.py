@@ -4,6 +4,7 @@ import logging
 from collections.abc import Sequence
 
 from sqlalchemy import String, cast, func, or_, select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.core.errors import AppError
@@ -94,6 +95,19 @@ def _existing_keys(db: Session, zone: HostedZone, exclude_id: str | None = None)
     return [(name, record_type) for name, record_type in db.execute(query)]
 
 
+def commit_or_conflict(db: Session) -> None:
+    """Commit, turning a unique-constraint race (two identical requests at once) into a 409."""
+    try:
+        db.commit()
+    except IntegrityError as exc:
+        db.rollback()
+        raise AppError(
+            INVALID_BATCH,
+            "Tried to create a resource record set that already exists.",
+            409,
+        ) from exc
+
+
 def _batch_error(status: int, message: str, errors: list[dict[str, str] | None]) -> AppError:
     return AppError(INVALID_BATCH, message, status, details={"errors": errors})
 
@@ -139,7 +153,7 @@ def create_records(db: Session, zone: HostedZone, inputs: Sequence[RecordInput])
         if candidate is not None
     ]
     db.add_all(created)
-    db.commit()
+    commit_or_conflict(db)
     logger.info("Created %d record(s) in zone %s", len(created), zone.id)
     return created
 
@@ -178,7 +192,7 @@ def update_record(db: Session, zone: HostedZone, record: Record, item: RecordInp
     record.ttl = candidate.ttl
     record.values = candidate.values
     record.updated_at = utcnow()
-    db.commit()
+    commit_or_conflict(db)
     db.refresh(record)
     return record
 

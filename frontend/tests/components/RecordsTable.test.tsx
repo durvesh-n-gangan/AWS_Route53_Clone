@@ -181,4 +181,57 @@ describe("RecordsTable", () => {
     );
     expect(router.push).toHaveBeenCalledWith("/route53/v2/hostedzones/ZREC/records/create");
   });
+
+  it("keeps the split panel in sync with refreshed data", async () => {
+    let ttl = 300;
+    mockApi({
+      "GET /api/v1/auth/me": () => jsonResponse(DEMO_USER),
+      "GET /api/v1/hostedzones/ZREC/records": () =>
+        jsonResponse(page([RECORDS[0], RECORDS[1], { ...RECORDS[2], ttl }])),
+    });
+    const { wrapper, table } = renderTable();
+    await eventually(() => expect(table().findRows()).toHaveLength(3));
+    act(() => table().findRowSelectionArea(3)!.click());
+    await eventually(() => expect(wrapper.findSplitPanel()).not.toBeNull());
+    expect(wrapper.findSplitPanel()!.getElement()).toHaveTextContent("300");
+
+    ttl = 3600;
+    act(() => table().findHeaderSlot()!.findButton('[aria-label="Refresh records"]')!.click());
+
+    await eventually(() => expect(table().findBodyCell(3, 8)!.getElement()).toHaveTextContent("3600"));
+    await eventually(() => expect(wrapper.findSplitPanel()!.getElement()).toHaveTextContent("3600"));
+  });
+
+  it("drops the selection when the selected record disappears after a refresh", async () => {
+    let rows = RECORDS;
+    mockApi({
+      "GET /api/v1/auth/me": () => jsonResponse(DEMO_USER),
+      "GET /api/v1/hostedzones/ZREC/records": () => jsonResponse(page(rows)),
+    });
+    const { wrapper, table } = renderTable();
+    await eventually(() => expect(table().findRows()).toHaveLength(3));
+    act(() => table().findRowSelectionArea(3)!.click());
+    await eventually(() => expect(wrapper.findSplitPanel()).not.toBeNull());
+
+    rows = RECORDS.slice(0, 2);
+    act(() => table().findHeaderSlot()!.findButton('[aria-label="Refresh records"]')!.click());
+
+    await eventually(() => expect(table().findRows()).toHaveLength(2));
+    await eventually(() => expect(wrapper.findSplitPanel()).toBeNull());
+  });
+
+  it("renders repeated values without React key warnings", async () => {
+    const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
+    mockApi({
+      "GET /api/v1/auth/me": () => jsonResponse(DEMO_USER),
+      "GET /api/v1/hostedzones/ZREC/records": () =>
+        jsonResponse(page([{ ...RECORDS[2], type: "TXT", values: ['"a"', '"a"'] }])),
+    });
+    const { table } = renderTable();
+    await eventually(() => expect(table().findRows()).toHaveLength(1));
+
+    const keyWarnings = consoleError.mock.calls.filter((args) => String(args[0]).includes("same key"));
+    consoleError.mockRestore();
+    expect(keyWarnings).toHaveLength(0);
+  });
 });

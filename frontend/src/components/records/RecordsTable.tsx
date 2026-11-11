@@ -12,7 +12,7 @@ import SpaceBetween from "@cloudscape-design/components/space-between";
 import Table, { type TableProps } from "@cloudscape-design/components/table";
 import TextFilter from "@cloudscape-design/components/text-filter";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { InfoLink } from "@/components/common/InfoLink";
 import { useShell } from "@/components/layout/ShellContext";
@@ -47,8 +47,8 @@ const COLUMNS: Column[] = [
     header: "Value/Route traffic to",
     cell: (r) => (
       <div>
-        {r.values.map((value) => (
-          <div key={value}>{value}</div>
+        {r.values.map((value, index) => (
+          <div key={`${index}-${value}`}>{value}</div>
         ))}
       </div>
     ),
@@ -94,7 +94,8 @@ export function RecordsTable({ zone }: { zone: HostedZone }) {
   const [aliasFilter, setAliasFilter] = useState<SelectProps.Option>(ANY_ALIAS);
   const [page, setPage] = useState(1);
   const [preferences, setPreferences] = useState(DEFAULT_PREFERENCES);
-  const [selectedItems, setSelectedItems] = useState<RecordSet[]>([]);
+  // Only IDs are kept, so the selected rows always come from the latest fetched data.
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [deleting, setDeleting] = useState<RecordSet[]>([]);
   const [importing, setImporting] = useState(false);
 
@@ -107,7 +108,14 @@ export function RecordsTable({ zone }: { zone: HostedZone }) {
     page_size: pageSize,
   });
   // Alias records are not supported, so "Alias: Yes" simply matches nothing.
-  const items = aliasFilter.value === "yes" ? [] : (records.data?.items ?? []);
+  const items = useMemo(
+    () => (aliasFilter.value === "yes" ? [] : (records.data?.items ?? [])),
+    [aliasFilter.value, records.data],
+  );
+  const selectedItems = useMemo(
+    () => items.filter((item) => selectedIds.includes(item.id)),
+    [items, selectedIds],
+  );
   const total = records.data?.total ?? 0;
   const pagesCount = Math.max(1, Math.ceil(total / pageSize));
   const filtered = Boolean(search || typeFilter.value || routingFilter.value || aliasFilter.value);
@@ -127,7 +135,7 @@ export function RecordsTable({ zone }: { zone: HostedZone }) {
           zoneId={zone.id}
           zoneName={zone.name}
           record={editing}
-          onClose={() => setSelectedItems([])}
+          onClose={() => setSelectedIds([])}
         />
       ),
     });
@@ -138,7 +146,7 @@ export function RecordsTable({ zone }: { zone: HostedZone }) {
 
   const resetPage = () => {
     setPage(1);
-    setSelectedItems([]);
+    setSelectedIds([]);
   };
 
   const empty = filtered ? (
@@ -189,7 +197,7 @@ export function RecordsTable({ zone }: { zone: HostedZone }) {
         loadingText="Loading records"
         selectionType="multi"
         selectedItems={selectedItems}
-        onSelectionChange={({ detail }) => setSelectedItems(detail.selectedItems)}
+        onSelectionChange={({ detail }) => setSelectedIds(detail.selectedItems.map((item) => item.id))}
         ariaLabels={{
           selectionGroupLabel: "Record selection",
           itemSelectionLabel: (_, r) => `Select ${displayName(r.name)} ${r.type}`,
@@ -268,7 +276,7 @@ export function RecordsTable({ zone }: { zone: HostedZone }) {
             pagesCount={pagesCount}
             onChange={({ detail }) => {
               setPage(detail.currentPageIndex);
-              setSelectedItems([]);
+              setSelectedIds([]);
             }}
             ariaLabels={{
               nextPageLabel: "Next page",
@@ -313,7 +321,7 @@ export function RecordsTable({ zone }: { zone: HostedZone }) {
         zoneId={zone.id}
         records={deleting}
         onDismiss={() => setDeleting([])}
-        onDeleted={() => setSelectedItems([])}
+        onDeleted={() => setSelectedIds([])}
       />
     </>
   );

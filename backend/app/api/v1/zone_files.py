@@ -14,18 +14,18 @@ router = APIRouter(prefix="/hostedzones/{zone_id}", tags=["zone files"])
 
 
 @router.post("/import", response_model=ImportResponse)
-async def import_zone_file(
+def import_zone_file(
     zone_id: str,
     db: DbSession,
     user: CurrentUser,
     mode: Literal["preview", "commit"] = "preview",
-    text: Annotated[str | None, Form()] = None,
+    text: Annotated[str | None, Form(max_length=bind_io.MAX_IMPORT_BYTES)] = None,
     file: Annotated[UploadFile | None, File()] = None,
 ):
     """Preview (default) or import a BIND zone file sent as `text` or as an uploaded `file`."""
     zone = get_zone(db, user, zone_id)
     if file is not None:
-        raw = await file.read(bind_io.MAX_IMPORT_BYTES + 1)
+        raw = file.file.read(bind_io.MAX_IMPORT_BYTES + 1)
         try:
             content = raw.decode("utf-8")
         except UnicodeDecodeError as exc:

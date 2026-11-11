@@ -53,8 +53,8 @@ export function RecordPanel({ zoneId, zoneName, record, onClose }: RecordPanelPr
           <KeyValue label="Record name">{displayName(record.name)}</KeyValue>
           <KeyValue label="Record type">{record.type}</KeyValue>
           <KeyValue label="Value">
-            {record.values.map((value) => (
-              <div key={value}>{value}</div>
+            {record.values.map((value, index) => (
+              <div key={`${index}-${value}`}>{value}</div>
             ))}
           </KeyValue>
           <KeyValue label="Alias">No</KeyValue>

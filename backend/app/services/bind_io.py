@@ -24,7 +24,7 @@ from app.services.record_validation import (
     ValidRecord,
     validate_record,
 )
-from app.services.records import _conflict
+from app.services.records import _conflict, commit_or_conflict
 from app.services.validation import normalize_fqdn
 
 MAX_IMPORT_BYTES = 1_000_000
@@ -106,6 +106,8 @@ def parse_zone_file(zone: HostedZone, text: str) -> list[ImportRow]:
 
     for number, blank_owner, line in _logical_lines(text):
         tokens = _TOKEN.findall(line)
+        if not tokens:  # e.g. a line holding only "(" or ")"
+            continue
         directive = tokens[0].upper()
         if directive == "$ORIGIN" and len(tokens) == 2:
             origin = normalize_fqdn(_absolute(tokens[1], origin))
@@ -228,7 +230,7 @@ def commit_import(db: Session, zone: HostedZone, rows: list[ImportRow]) -> int:
         )
         for record in ready
     )
-    db.commit()
+    commit_or_conflict(db)
     return len(ready)
 
 
