@@ -1,6 +1,6 @@
 """Name normalisation shared by zones and records.
 
-Per-type record value validation is added in Phase 6 (see docs/PLAN.md §5.5).
+Per-type record value validation lives in record_validation.py.
 """
 
 import re

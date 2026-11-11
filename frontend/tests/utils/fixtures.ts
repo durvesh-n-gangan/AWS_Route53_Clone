@@ -1,4 +1,4 @@
-import type { HostedZone, HostedZoneSummary, Page } from "@/types/api";
+import type { HostedZone, HostedZoneSummary, Page, RecordSet } from "@/types/api";
 
 export function zoneSummary(overrides: Partial<HostedZoneSummary> = {}): HostedZoneSummary {
   return {
@@ -32,4 +32,23 @@ export function zoneDetail(overrides: Partial<HostedZone> = {}): HostedZone {
 
 export function page<T>(items: T[], total = items.length, pageNumber = 1, pageSize = 10): Page<T> {
   return { items, total, page: pageNumber, page_size: pageSize };
+}
+
+
+export function recordSet(overrides: Partial<RecordSet> = {}): RecordSet {
+  return {
+    id: "RWWW0000000000000001",
+    hosted_zone_id: "ZEXAMPLE000000000001",
+    name: "www.example.com.",
+    type: "A",
+    ttl: 300,
+    values: ["192.0.2.10"],
+    routing_policy: "simple",
+    set_identifier: null,
+    alias_target: null,
+    is_default: false,
+    created_at: "2026-11-11T10:00:00Z",
+    updated_at: "2026-11-11T10:00:00Z",
+    ...overrides,
+  };
 }

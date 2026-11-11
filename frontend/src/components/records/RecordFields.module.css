@@ -1,0 +1,20 @@
+/* The zone name shown after the record-name input (".example.com"). */
+.suffix {
+  padding-top: 6px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--color-text-body-secondary, #5f6b7a);
+}
+
+/* TTL input followed by the 1m / 1h / 1d shortcut buttons, kept on one line. */
+.ttl {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ttlInput {
+  width: 140px;
+  flex: none;
+}

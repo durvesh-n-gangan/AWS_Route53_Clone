@@ -3,6 +3,7 @@
 import AppLayout from "@cloudscape-design/components/app-layout";
 import BreadcrumbGroup from "@cloudscape-design/components/breadcrumb-group";
 import Flashbar from "@cloudscape-design/components/flashbar";
+import SplitPanel from "@cloudscape-design/components/split-panel";
 import { usePathname } from "next/navigation";
 import { useEffect, useState, type ReactNode } from "react";
 
@@ -20,15 +21,25 @@ export function ConsoleShell({ children }: { children: ReactNode }) {
   const pathname = usePathname() ?? "";
   const onFollow = useFollow();
   const { items: flashItems, onNavigate } = useFlash();
-  const { helpContent, toolsOpen, setToolsOpen, breadcrumbLabels } = useShell();
+  const {
+    helpContent,
+    toolsOpen,
+    setToolsOpen,
+    breadcrumbLabels,
+    splitPanel,
+    setSplitPanel,
+    splitPanelOpen,
+    setSplitPanelOpen,
+  } = useShell();
   const [navigationOpen, setNavigationOpen] = useState(true);
   const { data: me } = useMe();
   const logout = useLogout();
 
-  // Expire flash messages that have already been shown on a previous page.
+  // On every route change: expire flash messages already shown, and close page panels.
   useEffect(() => {
     onNavigate();
-  }, [pathname, onNavigate]);
+    setSplitPanel(null);
+  }, [pathname, onNavigate, setSplitPanel]);
 
   return (
     <>
@@ -68,6 +79,32 @@ export function ConsoleShell({ children }: { children: ReactNode }) {
             }}
           />
         }
+        splitPanel={
+          splitPanel ? (
+            <SplitPanel
+              header={splitPanel.header}
+              hidePreferencesButton
+              closeBehavior="hide"
+              i18nStrings={{
+                closeButtonAriaLabel: "Close panel",
+                openButtonAriaLabel: "Open panel",
+                resizeHandleAriaLabel: "Resize panel",
+                preferencesTitle: "Panel preferences",
+                preferencesPositionLabel: "Panel position",
+                preferencesPositionDescription: "Choose where the panel is shown.",
+                preferencesPositionSide: "Side",
+                preferencesPositionBottom: "Bottom",
+                preferencesConfirm: "Confirm",
+                preferencesCancel: "Cancel",
+              }}
+            >
+              {splitPanel.content}
+            </SplitPanel>
+          ) : undefined
+        }
+        splitPanelOpen={splitPanelOpen}
+        onSplitPanelToggle={({ detail }) => setSplitPanelOpen(detail.open)}
+        splitPanelPreferences={{ position: "side" }}
         tools={helpContent ?? <DefaultHelp />}
         toolsOpen={toolsOpen}
         onToolsChange={({ detail }) => setToolsOpen(detail.open)}

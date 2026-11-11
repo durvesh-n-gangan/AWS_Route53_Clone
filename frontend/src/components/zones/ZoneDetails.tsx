@@ -17,6 +17,7 @@ import { useRouter } from "next/navigation";
 import { useState, type ReactNode } from "react";
 
 import { InfoLink } from "@/components/common/InfoLink";
+import { RecordsTable } from "@/components/records/RecordsTable";
 import { useBreadcrumbLabel } from "@/components/layout/ShellContext";
 import { DeleteZoneModal } from "@/components/zones/DeleteZoneModal";
 import { HostedZonesHelp } from "@/components/zones/zoneHelp";
@@ -113,13 +114,7 @@ function TagsTab({ zone, onManage }: { zone: HostedZone; onManage: () => void })
   );
 }
 
-interface ZoneDetailsProps {
-  zoneId: string;
-  /** The Records tab content (added by the records feature). */
-  recordsTab?: (zone: HostedZone) => ReactNode;
-}
-
-export function ZoneDetails({ zoneId, recordsTab }: ZoneDetailsProps) {
+export function ZoneDetails({ zoneId }: { zoneId: string }) {
   const router = useRouter();
   const zoneQuery = useZone(zoneId);
   const zone = zoneQuery.data;
@@ -177,13 +172,7 @@ export function ZoneDetails({ zoneId, recordsTab }: ZoneDetailsProps) {
             {
               id: "records",
               label: `Records (${zone.record_count})`,
-              content: recordsTab ? (
-                recordsTab(zone)
-              ) : (
-                <Container>
-                  <Box color="text-body-secondary">Records are listed here.</Box>
-                </Container>
-              ),
+              content: <RecordsTable zone={zone} />,
             },
             {
               id: "dnssec",

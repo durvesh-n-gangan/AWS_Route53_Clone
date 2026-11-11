@@ -19,6 +19,16 @@ interface ShellContextValue {
   openHelp: (content: ReactNode) => void;
   breadcrumbLabels: Readonly<Record<string, string>>;
   setBreadcrumbLabel: (segment: string, label: string) => void;
+  /** Content of the AppLayout split panel (e.g. "Edit record"); null hides it. */
+  splitPanel: SplitPanelContent | null;
+  setSplitPanel: (panel: SplitPanelContent | null) => void;
+  splitPanelOpen: boolean;
+  setSplitPanelOpen: (open: boolean) => void;
+}
+
+export interface SplitPanelContent {
+  header: string;
+  content: ReactNode;
 }
 
 const ShellContext = createContext<ShellContextValue | null>(null);
@@ -27,6 +37,8 @@ export function ShellProvider({ children }: { children: ReactNode }) {
   const [helpContent, setHelpContent] = useState<ReactNode | null>(null);
   const [toolsOpen, setToolsOpen] = useState(false);
   const [breadcrumbLabels, setBreadcrumbLabels] = useState<Record<string, string>>({});
+  const [splitPanel, setSplitPanel] = useState<SplitPanelContent | null>(null);
+  const [splitPanelOpen, setSplitPanelOpen] = useState(true);
 
   const openHelp = useCallback((content: ReactNode) => {
     setHelpContent(content);
@@ -47,8 +59,12 @@ export function ShellProvider({ children }: { children: ReactNode }) {
       openHelp,
       breadcrumbLabels,
       setBreadcrumbLabel,
+      splitPanel,
+      setSplitPanel,
+      splitPanelOpen,
+      setSplitPanelOpen,
     }),
-    [helpContent, toolsOpen, openHelp, breadcrumbLabels, setBreadcrumbLabel],
+    [helpContent, toolsOpen, openHelp, breadcrumbLabels, setBreadcrumbLabel, splitPanel, splitPanelOpen],
   );
 
   return <ShellContext.Provider value={value}>{children}</ShellContext.Provider>;

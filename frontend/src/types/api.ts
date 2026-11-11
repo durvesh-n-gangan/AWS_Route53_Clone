@@ -84,3 +84,36 @@ export interface HostedZoneUpdateInput {
   comment?: string;
   tags?: Tag[];
 }
+
+export type RecordType = "A" | "AAAA" | "CNAME" | "TXT" | "MX" | "NS" | "PTR" | "SRV" | "CAA" | "SOA";
+
+export interface RecordSet {
+  id: string;
+  hosted_zone_id: string;
+  /** Fully qualified, with a trailing dot. */
+  name: string;
+  type: RecordType;
+  ttl: number;
+  values: string[];
+  routing_policy: string;
+  set_identifier: string | null;
+  alias_target: Record<string, unknown> | null;
+  is_default: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface RecordInput {
+  name: string;
+  type: RecordType;
+  ttl: number;
+  values: string[];
+  routing_policy?: "simple";
+}
+
+export interface RecordListParams {
+  search?: string;
+  type?: RecordType;
+  page?: number;
+  page_size?: number;
+}
