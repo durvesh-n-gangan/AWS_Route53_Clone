@@ -70,7 +70,10 @@ async def _handle_validation_error(_: Request, exc: RequestValidationError) -> J
         location = [str(part) for part in err.get("loc", ())]
         # Drop the leading "body"/"query"/"path" marker so clients get the field path.
         field_path = location[1:] if len(location) > 1 else location
-        fields.append({"field": ".".join(field_path), "message": err.get("msg", "Invalid value")})
+        message = str(err.get("msg", "Invalid value"))
+        # Pydantic prefixes messages raised by our validators; clients only need our text.
+        message = message.removeprefix("Value error, ")
+        fields.append({"field": ".".join(field_path), "message": message})
     return _json_error(
         422, "InvalidInput", "The request contains invalid values.", {"fields": fields}
     )

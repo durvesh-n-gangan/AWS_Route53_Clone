@@ -24,3 +24,63 @@ export interface Page<T> {
   page: number;
   page_size: number;
 }
+
+export type ZoneType = "public" | "private";
+
+export type ZoneSort =
+  | "name"
+  | "-name"
+  | "created_at"
+  | "-created_at"
+  | "record_count"
+  | "-record_count";
+
+export interface Tag {
+  key: string;
+  value: string;
+}
+
+export interface VpcAssociation {
+  vpc_id: string;
+  region: string;
+}
+
+export interface HostedZoneSummary {
+  id: string;
+  /** Fully qualified, with a trailing dot (example.com.). */
+  name: string;
+  type: ZoneType;
+  comment: string;
+  record_count: number;
+  created_by: string;
+  caller_reference: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface HostedZone extends HostedZoneSummary {
+  name_servers: string[];
+  tags: Tag[];
+  vpcs: VpcAssociation[];
+}
+
+export interface ZoneListParams {
+  search?: string;
+  type?: ZoneType;
+  sort?: ZoneSort;
+  page?: number;
+  page_size?: number;
+}
+
+export interface HostedZoneCreateInput {
+  name: string;
+  comment: string;
+  type: ZoneType;
+  vpcs: VpcAssociation[];
+  tags: Tag[];
+}
+
+export interface HostedZoneUpdateInput {
+  comment?: string;
+  tags?: Tag[];
+}

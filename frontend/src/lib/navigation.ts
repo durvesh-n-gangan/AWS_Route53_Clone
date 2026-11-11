@@ -34,11 +34,6 @@ export const PLACEHOLDER_PAGES: Record<string, PlaceholderPage> = {
     title: "Dashboard",
     description: "An overview of your DNS management, traffic management and domain registration.",
   },
-  // Temporary until the hosted zones list is built in Phase 5.
-  hostedzones: {
-    title: "Hosted zones",
-    description: "Hosted zones are being built and will be available in the next release.",
-  },
   healthchecks: {
     title: "Health checks",
     description: "Monitor the health of your resources and route traffic away from unhealthy ones.",
@@ -225,4 +220,11 @@ export function buildBreadcrumbs(
   if (page.section) crumbs.push({ text: page.section, href: placeholderHref(key) });
   crumbs.push({ text: page.title, href: placeholderHref(key) });
   return crumbs;
+}
+
+/** AppLayout content type for a path: tables, forms and detail pages lay out differently. */
+export function contentTypeFor(pathname: string): "table" | "form" | "default" {
+  if (pathname === ROUTES.hostedZones) return "table";
+  if (/\/(create|edit)$/.test(pathname)) return "form";
+  return "default";
 }

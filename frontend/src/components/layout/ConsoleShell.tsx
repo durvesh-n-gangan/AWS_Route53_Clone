@@ -4,14 +4,14 @@ import AppLayout from "@cloudscape-design/components/app-layout";
 import BreadcrumbGroup from "@cloudscape-design/components/breadcrumb-group";
 import Flashbar from "@cloudscape-design/components/flashbar";
 import { usePathname } from "next/navigation";
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 
 import { useFlash } from "@/components/common/FlashProvider";
 import { DefaultHelp } from "@/components/layout/HelpPanelContent";
 import { Route53SideNav } from "@/components/layout/Route53SideNav";
 import { useShell } from "@/components/layout/ShellContext";
 import { TopNav } from "@/components/layout/TopNav";
-import { buildBreadcrumbs } from "@/lib/navigation";
+import { buildBreadcrumbs, contentTypeFor } from "@/lib/navigation";
 import { useLogout, useMe } from "@/lib/queries/auth";
 import { useFollow } from "@/lib/useFollow";
 
@@ -19,11 +19,16 @@ import { useFollow } from "@/lib/useFollow";
 export function ConsoleShell({ children }: { children: ReactNode }) {
   const pathname = usePathname() ?? "";
   const onFollow = useFollow();
-  const { items: flashItems } = useFlash();
+  const { items: flashItems, onNavigate } = useFlash();
   const { helpContent, toolsOpen, setToolsOpen, breadcrumbLabels } = useShell();
   const [navigationOpen, setNavigationOpen] = useState(true);
   const { data: me } = useMe();
   const logout = useLogout();
+
+  // Expire flash messages that have already been shown on a previous page.
+  useEffect(() => {
+    onNavigate();
+  }, [pathname, onNavigate]);
 
   return (
     <>
@@ -35,6 +40,7 @@ export function ConsoleShell({ children }: { children: ReactNode }) {
       </div>
       <AppLayout
         headerSelector="#top-nav"
+        contentType={contentTypeFor(pathname)}
         navigation={<Route53SideNav />}
         navigationOpen={navigationOpen}
         onNavigationChange={({ detail }) => setNavigationOpen(detail.open)}

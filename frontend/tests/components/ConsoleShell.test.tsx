@@ -135,6 +135,32 @@ describe("ConsoleShell", () => {
     expect(items[0].findContent()!.getElement()).toHaveTextContent("Saved");
   });
 
+  it("keeps a flash message for exactly one navigation", () => {
+    const { handle, Capture } = captureAddFlash();
+    navigation.pathname = "/route53/v2/hostedzones/create";
+    const { wrapper, rerender } = renderShell(<Capture />);
+
+    act(() => {
+      handle.addFlash({ type: "success", content: "Hosted zone created." });
+    });
+    const rerenderAt = (path: string) => {
+      navigation.pathname = path;
+      rerender(
+        <Providers>
+          <ConsoleShell>
+            <Capture />
+          </ConsoleShell>
+        </Providers>,
+      );
+    };
+
+    rerenderAt("/route53/v2/hostedzones/Z1"); // the redirect after creating
+    expect(wrapper.findFlashbar()!.findItems()).toHaveLength(1);
+
+    rerenderAt("/route53/v2/hostedzones"); // any later navigation
+    expect(wrapper.findFlashbar()!.findItems()).toHaveLength(0);
+  });
+
   it("shows the top navigation linking home, with Services and the Global region", () => {
     const { wrapper } = renderShell();
     const topNav = wrapper.findTopNavigation()!;

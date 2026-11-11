@@ -3,6 +3,41 @@
 Per-type record value validation is added in Phase 6 (see docs/PLAN.md §5.5).
 """
 
+import re
+
+MAX_DOMAIN_LENGTH = 253
+MAX_LABEL_LENGTH = 63
+# Letters, digits, hyphens and underscores; no leading or trailing hyphen.
+_LABEL = re.compile(r"^[a-z0-9_](?:[a-z0-9_-]*[a-z0-9_])?$")
+
+
+def validate_domain_name(name: str) -> str:
+    """Return the normalised FQDN, or raise ValueError with a console-style message."""
+    fqdn = normalize_fqdn(name)
+    bare = fqdn.rstrip(".")
+    if not bare:
+        raise ValueError("Enter a domain name.")
+    if len(bare) > MAX_DOMAIN_LENGTH:
+        raise ValueError(f"The domain name can have up to {MAX_DOMAIN_LENGTH} characters.")
+    labels = bare.split(".")
+    if len(labels) < 2:
+        raise ValueError("Enter a fully qualified domain name, such as example.com.")
+    for label in labels:
+        if not label:
+            raise ValueError("The domain name can't contain empty labels (two dots in a row).")
+        if len(label) > MAX_LABEL_LENGTH:
+            raise ValueError(
+                f"Each label in the domain name can have up to {MAX_LABEL_LENGTH} characters."
+            )
+        if not _LABEL.match(label):
+            raise ValueError(
+                f"The label '{label}' is not valid. Use letters, numbers and hyphens, and don't "
+                "start or end a label with a hyphen."
+            )
+    if labels[-1].isdigit():
+        raise ValueError("The top-level domain can't be all numbers.")
+    return fqdn
+
 
 def normalize_fqdn(name: str) -> str:
     """Lowercase, trim and ensure exactly one trailing dot: `Example.COM` -> `example.com.`."""
