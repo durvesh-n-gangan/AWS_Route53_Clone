@@ -1,5 +1,5 @@
 import createWrapper from "@cloudscape-design/components/test-utils/dom";
-import { act, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -173,6 +173,37 @@ describe("ConsoleShell", () => {
     const overflow = topNav.findOverflowMenu()!.getElement();
     expect(overflow).toHaveTextContent("Global");
     expect(overflow).toHaveTextContent("Services");
+  });
+});
+
+describe("keyboard shortcuts", () => {
+  it("'?' opens the shortcuts dialog", () => {
+    renderShell();
+
+    act(() => {
+      fireEvent.keyDown(document.body, { key: "?" });
+    });
+
+    const modal = createWrapper(document.body).findModal()!;
+    expect(modal.isVisible()).toBe(true);
+    expect(modal.findHeader().getElement()).toHaveTextContent("Keyboard shortcuts");
+  });
+
+  it("'c' opens the create page for the current context", () => {
+    navigation.pathname = "/route53/v2/hostedzones";
+    renderShell();
+
+    fireEvent.keyDown(document.body, { key: "c" });
+
+    expect(navigation.push).toHaveBeenCalledWith("/route53/v2/hostedzones/create");
+  });
+
+  it("'/' focuses the page's filter box, not the top navigation search", () => {
+    renderShell(<input type="search" aria-label="Filter hosted zones" />);
+
+    fireEvent.keyDown(document.body, { key: "/" });
+
+    expect(screen.getByLabelText("Filter hosted zones")).toHaveFocus();
   });
 });
 

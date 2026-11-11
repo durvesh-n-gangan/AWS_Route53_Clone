@@ -7,6 +7,7 @@ import TopNavigation, {
 import { useState } from "react";
 
 import { ROUTES } from "@/lib/navigation";
+import { setThemeMode, useThemeMode } from "@/lib/theme";
 import { useFollow } from "@/lib/useFollow";
 
 /**
@@ -29,6 +30,7 @@ export interface TopNavAccount {
 interface TopNavProps {
   account?: TopNavAccount | null;
   onSignOut?: () => void;
+  onShowShortcuts?: () => void;
 }
 
 /** Formats a 12-digit account ID the way the console does: 1234-5678-9012. */
@@ -36,9 +38,10 @@ export function formatAccountId(accountId: string): string {
   return accountId.replace(/^(\d{4})(\d{4})(\d{4})$/, "$1-$2-$3");
 }
 
-export function TopNav({ account, onSignOut }: TopNavProps) {
+export function TopNav({ account, onSignOut, onShowShortcuts }: TopNavProps) {
   const [search, setSearch] = useState("");
   const onFollow = useFollow();
+  const mode = useThemeMode();
 
   const accountLabel = account
     ? `${account.username} @ ${formatAccountId(account.accountId)}`
@@ -58,13 +61,34 @@ export function TopNav({ account, onSignOut }: TopNavProps) {
     },
     { type: "button", iconName: "command-prompt", ariaLabel: "CloudShell", title: "CloudShell" },
     { type: "button", iconName: "notification", ariaLabel: "Notifications", title: "Notifications" },
-    { type: "button", iconName: "support", ariaLabel: "Help", title: "Help" },
+    {
+      type: "button",
+      iconName: "support",
+      ariaLabel: "Keyboard shortcuts and help",
+      title: "Help",
+      onClick: onShowShortcuts,
+    },
     {
       type: "menu-dropdown",
       iconName: "settings",
       ariaLabel: "Settings",
       title: "Settings",
-      items: [{ id: "unified-settings", text: "Unified settings", disabled: true }],
+      items: [
+        {
+          id: "visual-mode",
+          text: "Visual mode",
+          items: [
+            { id: "theme-light", text: "Light", itemType: "checkbox", checked: mode === "light" },
+            { id: "theme-dark", text: "Dark", itemType: "checkbox", checked: mode === "dark" },
+          ],
+        },
+        { id: "shortcuts", text: "Keyboard shortcuts" },
+      ],
+      onItemClick: ({ detail }) => {
+        if (detail.id === "theme-light") setThemeMode("light");
+        if (detail.id === "theme-dark") setThemeMode("dark");
+        if (detail.id === "shortcuts") onShowShortcuts?.();
+      },
     },
     {
       type: "menu-dropdown",

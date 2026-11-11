@@ -228,3 +228,11 @@ export function contentTypeFor(pathname: string): "table" | "form" | "default" {
   if (/\/(create|edit)$/.test(pathname)) return "form";
   return "default";
 }
+
+/** Where the "c" shortcut goes: create a zone from the list, a record from inside a zone. */
+export function createTargetFor(pathname: string): string | null {
+  if (pathname === ROUTES.hostedZones) return ROUTES.createHostedZone;
+  const zone = /^\/route53\/v2\/hostedzones\/([^/]+)$/.exec(pathname);
+  if (zone && zone[1] !== "create") return ROUTES.createRecord(decodeURIComponent(zone[1]));
+  return null;
+}
