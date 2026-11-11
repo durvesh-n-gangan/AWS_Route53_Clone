@@ -6,16 +6,17 @@ services:
     runtime: docker
     dockerfilePath: ./backend/Dockerfile
     dockerContext: ./backend
-    # A persistent disk needs a paid instance type; on "free" the SQLite file is reset
-    # whenever the service restarts or redeploys (the demo data is re-seeded on start).
-    plan: starter
+    # Free instance: no persistent disk, so the SQLite file lives in the container and is
+    # reset to the demo seed whenever the service restarts or redeploys. To keep data, switch
+    # to `plan: starter` and add:
+    #   disk:
+    #     name: route53-data
+    #     mountPath: /var/data
+    #     sizeGB: 1
+    plan: free
     region: oregon
     healthCheckPath: /api/v1/health
     autoDeploy: true
-    disk:
-      name: route53-data
-      mountPath: /var/data
-      sizeGB: 1
     envVars:
       - key: DATABASE_URL
         value: sqlite:////var/data/route53.db

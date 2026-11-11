@@ -143,8 +143,7 @@ Stop the backend, delete `backend/data/route53.db`, then run the `alembic upgrad
 
 ## Deployment
 
-The backend runs as a Docker container on [Render](https://render.com) with a small persistent
-disk for the SQLite file. The frontend runs on [Vercel](https://vercel.com). The browser only
+The backend runs as a Docker container on [Render](https://render.com)'s free instance type. The frontend runs on [Vercel](https://vercel.com). The browser only
 talks to Vercel: its `/api/*` rewrite forwards calls to Render, so the session cookie belongs to
 the Vercel domain and no cross-site cookie or CORS setup is needed. That is also why there is no
 `NEXT_PUBLIC_API_URL` or session secret: the frontend uses relative `/api` paths, and session
@@ -159,18 +158,18 @@ uvicorn) and [render.yaml](render.yaml).
 1. Push this repository to GitHub.
 2. Sign in at https://dashboard.render.com (signing in with GitHub is simplest).
 3. Click **New +** → **Blueprint**, connect your GitHub account if asked, and pick the repository.
-4. Render reads `render.yaml` and lists the **route53-clone-api** web service with its 1 GB disk.
+4. Render reads `render.yaml` and lists the **route53-clone-api** web service (free plan).
    When it asks for `FRONTEND_ORIGIN`, enter `https://example.invalid` for now (you'll replace it
    in step 3 below).
-5. Click **Apply**. The `starter` instance type is needed for the disk, so Render asks for a
-   payment method.
+5. Click **Apply**.
 6. Wait for the deploy to show **Live**, then open
    `https://<your-service>.onrender.com/api/v1/health`. It should return
    `{"status":"ok","database":"ok"}`. Copy the service URL.
 
-*Free option:* in `render.yaml` change `plan: starter` to `plan: free` and delete the `disk:`
-block. It works the same, but the free service sleeps after 15 idle minutes (the first request
-then takes about a minute), and data is reset to the demo seed on every restart or redeploy.
+**About the free plan:** the service sleeps after 15 idle minutes, so the first request after a
+pause takes about a minute. It has no persistent disk, so the database is reset to the demo
+data whenever the service restarts, sleeps or redeploys. To keep data, switch to
+`plan: starter` (paid) and add the `disk:` block shown in the comment in `render.yaml`.
 
 ### 2. Frontend on Vercel
 
@@ -193,9 +192,11 @@ then takes about a minute), and data is reset to the demo seed on every restart 
 
 1. In Render open the service → **Environment**, set `FRONTEND_ORIGIN` to the Vercel URL and
    save (Render redeploys).
-2. Open the Vercel URL, sign in with `admin` / `admin123`, create a hosted zone and a record.
-3. In Render click **Manual Deploy** → **Deploy latest commit**. When it is live again, reload the
-   Vercel site: the zone and record should still be there.
+2. Open the Vercel URL, sign in with `admin` / `admin123`, create a hosted zone and a record,
+   then edit and delete them.
+3. With a disk (paid plan) you can also check persistence: **Manual Deploy** → **Deploy latest
+   commit** in Render, then reload the site; the zone should still be there. On the free plan it
+   will be gone, as described above.
 
 If you change `BACKEND_URL` later, redeploy the Vercel project: the rewrite target is fixed at
 build time.
@@ -535,6 +536,9 @@ the source line numbers, and the totals `ready`, `skipped`, `errors` and `create
 - **Sign-in throttling is in memory** and per process. Behind the Next.js proxy the backend sees
   the same client address for everyone, so the limit effectively applies per user name: five
   wrong passwords for `admin` lock the shared demo account for five minutes.
+- **Hosted demo data is temporary.** The demo backend runs on Render's free plan, which has no
+  persistent disk: changes are lost (and the demo data restored) when the service sleeps,
+  restarts or redeploys. Locally, data persists normally.
 - **SQLite** suits a single-instance demo. Several backend instances would need a shared
   database and a shared throttle store.
 - **UI fidelity.** The sign-in page was compared with captures of the real public sign-in page.
