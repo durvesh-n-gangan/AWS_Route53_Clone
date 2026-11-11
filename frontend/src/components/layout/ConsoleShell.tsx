@@ -12,6 +12,7 @@ import { Route53SideNav } from "@/components/layout/Route53SideNav";
 import { useShell } from "@/components/layout/ShellContext";
 import { TopNav } from "@/components/layout/TopNav";
 import { buildBreadcrumbs } from "@/lib/navigation";
+import { useLogout, useMe } from "@/lib/queries/auth";
 import { useFollow } from "@/lib/useFollow";
 
 /** The console frame shared by every /route53/v2 page. */
@@ -21,11 +22,16 @@ export function ConsoleShell({ children }: { children: ReactNode }) {
   const { items: flashItems } = useFlash();
   const { helpContent, toolsOpen, setToolsOpen, breadcrumbLabels } = useShell();
   const [navigationOpen, setNavigationOpen] = useState(true);
+  const { data: me } = useMe();
+  const logout = useLogout();
 
   return (
     <>
       <div id="top-nav">
-        <TopNav />
+        <TopNav
+          account={me ? { username: me.username, accountId: me.account_id } : null}
+          onSignOut={() => logout.mutate()}
+        />
       </div>
       <AppLayout
         headerSelector="#top-nav"

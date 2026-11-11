@@ -1,0 +1,24 @@
+.page {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 64px 16px 32px;
+  box-sizing: border-box;
+  background: #ffffff;
+}
+
+.column {
+  width: 100%;
+  max-width: 420px;
+}
+
+/* A plain text mark drawn with CSS; the real AWS logo is not used. */
+.mark {
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 40px;
+  font-weight: 700;
+  letter-spacing: -1px;
+  color: #232f3e;
+  text-align: center;
+}

@@ -8,6 +8,16 @@ export interface ApiErrorBody {
   };
 }
 
+export interface CurrentUser {
+  username: string;
+  account_id: string;
+}
+
+export interface LoginInput {
+  username: string;
+  password: string;
+}
+
 export interface Page<T> {
   items: T[];
   total: number;

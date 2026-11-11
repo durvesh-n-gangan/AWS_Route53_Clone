@@ -1,13 +1,15 @@
 import createWrapper from "@cloudscape-design/components/test-utils/dom";
-import { act, render, screen } from "@testing-library/react";
+import { act, render, screen, waitFor } from "@testing-library/react";
 import type { ReactNode } from "react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { Providers } from "@/app/providers";
 import { useFlash } from "@/components/common/FlashProvider";
 import { ConsoleShell } from "@/components/layout/ConsoleShell";
 import { useBreadcrumbLabel } from "@/components/layout/ShellContext";
 import { formatAccountId } from "@/components/layout/TopNav";
+
+import { DEMO_USER, jsonResponse, mockApi } from "../utils/mockApi";
 
 const navigation = vi.hoisted(() => ({
   pathname: "/route53/v2/home",
@@ -17,6 +19,12 @@ const navigation = vi.hoisted(() => ({
 vi.mock("next/navigation", () => ({
   usePathname: () => navigation.pathname,
   useRouter: () => ({ push: navigation.push }),
+}));
+
+const session = vi.hoisted(() => ({ hardNavigate: vi.fn() }));
+vi.mock("@/lib/auth/session", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/auth/session")>()),
+  hardNavigate: session.hardNavigate,
 }));
 
 function renderShell(children: ReactNode = <p>page body</p>) {
@@ -38,9 +46,20 @@ function captureAddFlash() {
   return { handle, Capture };
 }
 
+let fetchMock: ReturnType<typeof mockApi>;
+
 beforeEach(() => {
   navigation.pathname = "/route53/v2/home";
   navigation.push.mockReset();
+  session.hardNavigate.mockReset();
+  fetchMock = mockApi({
+    "GET /api/v1/auth/me": () => jsonResponse(DEMO_USER),
+    "POST /api/v1/auth/logout": () => new Response(null, { status: 204 }),
+  });
+});
+
+afterEach(() => {
+  vi.unstubAllGlobals();
 });
 
 describe("ConsoleShell", () => {
@@ -128,6 +147,44 @@ describe("ConsoleShell", () => {
     const overflow = topNav.findOverflowMenu()!.getElement();
     expect(overflow).toHaveTextContent("Global");
     expect(overflow).toHaveTextContent("Services");
+  });
+});
+
+describe("account menu", () => {
+  function openAccountMenu(wrapper: ReturnType<typeof createWrapper>) {
+    const topNav = wrapper.findTopNavigation()!;
+    act(() => topNav.findOverflowMenuButton()!.click());
+    const overflow = topNav.findOverflowMenu()!;
+    // jsdom has no layout, so every utility sits in the overflow menu; the account is last.
+    const utilities = overflow.findAll("li");
+    act(() => utilities[utilities.length - 1].find("button, a")!.click());
+    return overflow;
+  }
+
+  it("shows the signed-in user and account ID", async () => {
+    const { wrapper } = renderShell();
+    const topNav = wrapper.findTopNavigation()!;
+    act(() => topNav.findOverflowMenuButton()!.click());
+
+    await waitFor(() =>
+      expect(topNav.findOverflowMenu()!.getElement()).toHaveTextContent(
+        "admin @ 1234-5678-9012",
+      ),
+    );
+  });
+
+  it("signs out through the API and returns to the sign-in page", async () => {
+    const { wrapper } = renderShell();
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1)); // /auth/me loaded
+
+    const overflow = openAccountMenu(wrapper);
+    act(() => overflow.findMenuDropdownItemById("signout")!.click());
+
+    await waitFor(() => expect(session.hardNavigate).toHaveBeenCalledWith("/login"));
+    expect(fetchMock).toHaveBeenCalledWith(
+      "/api/v1/auth/logout",
+      expect.objectContaining({ method: "POST", credentials: "include" }),
+    );
   });
 });
 

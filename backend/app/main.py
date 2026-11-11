@@ -36,6 +36,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         description="Mock Route 53 console API. No real DNS is served and no AWS calls are made.",
         lifespan=lifespan,
     )
+    app.state.settings = settings
     app.add_middleware(
         CORSMiddleware,
         allow_origins=settings.cors_origins,

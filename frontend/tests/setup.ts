@@ -9,7 +9,7 @@ afterEach(() => {
 
 // jsdom does not implement matchMedia; Cloudscape queries it for motion and breakpoints.
 // Reporting "reduced motion" turns Cloudscape animations off, so removals happen at once.
-if (!window.matchMedia) {
+if (typeof window !== "undefined" && !window.matchMedia) {
   window.matchMedia = (query: string) =>
     ({
       matches: query.includes("prefers-reduced-motion"),
