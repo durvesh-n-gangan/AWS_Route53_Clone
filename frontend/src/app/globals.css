@@ -1,0 +1,12 @@
+/* Cloudscape global styles (imported in layout.tsx) provide fonts, colours and resets. */
+
+body {
+  margin: 0;
+}
+
+/* The top navigation stays pinned while the page scrolls; AppLayout reads its height. */
+#top-nav {
+  position: sticky;
+  top: 0;
+  z-index: 1002;
+}
