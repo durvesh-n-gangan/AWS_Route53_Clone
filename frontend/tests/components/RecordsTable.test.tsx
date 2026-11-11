@@ -73,7 +73,7 @@ describe("RecordsTable", () => {
     const { table } = renderTable();
     await eventually(() => expect(table().findRows()).toHaveLength(3));
 
-    const select = table().findFilterSlot()!.findSelect()!;
+    const select = table().findFilterSlot()!.findAllSelects()[0];
     act(() => select.openDropdown());
     act(() => select.selectOptionByValue("A"));
 
@@ -82,7 +82,7 @@ describe("RecordsTable", () => {
     expect(new URL(lastUrl, "http://x").searchParams.get("type")).toBe("A");
   });
 
-  it("opens the edit split panel when one record is selected", async () => {
+  it("shows record details in the split panel and switches to the edit form", async () => {
     api();
     const { wrapper, table } = renderTable();
     await eventually(() => expect(table().findRows()).toHaveLength(3));
@@ -91,10 +91,16 @@ describe("RecordsTable", () => {
 
     await eventually(() =>
       expect(wrapper.findSplitPanel()!.findHeader().getElement()).toHaveTextContent(
-        "Edit record: www.example.com (A)",
+        "www.example.com (A)",
       ),
     );
-    expect(wrapper.findSplitPanel()!.getElement()).toHaveTextContent("Record name");
+    const panel = createWrapper(wrapper.findSplitPanel()!.getElement());
+    expect(panel.getElement()).toHaveTextContent("192.0.2.10");
+    expect(panel.findAllFormFields()).toHaveLength(0);
+
+    act(() => panel.findAllButtons().find((b) => b.getElement().textContent === "Edit record")!.click());
+
+    expect(panel.findAllFormFields().length).toBeGreaterThan(0);
   });
 
   it("locks name and type when a default record is edited", async () => {
@@ -106,6 +112,7 @@ describe("RecordsTable", () => {
 
     await eventually(() => expect(wrapper.findSplitPanel()).not.toBeNull());
     const panel = createWrapper(wrapper.findSplitPanel()!.getElement());
+    act(() => panel.findAllButtons().find((b) => b.getElement().textContent === "Edit record")!.click());
     expect(panel.getElement()).toHaveTextContent("You can change its TTL and value only.");
     const [nameField, typeField] = panel.findAllFormFields();
     expect(nameField.findControl()!.findInput()!.isDisabled()).toBe(true);

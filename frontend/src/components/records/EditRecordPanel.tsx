@@ -20,10 +20,12 @@ interface EditRecordPanelProps {
   zoneName: string;
   record: RecordSet;
   onDone: () => void;
+  /** Leave the form without saving (defaults to onDone). */
+  onCancel?: () => void;
 }
 
 /** Split-panel form for one record. Remount it (key) when the selection changes. */
-export function EditRecordPanel({ zoneId, zoneName, record, onDone }: EditRecordPanelProps) {
+export function EditRecordPanel({ zoneId, zoneName, record, onDone, onCancel }: EditRecordPanelProps) {
   const [draft, setDraft] = useState(() => toDraft(record, zoneName));
   const [errors, setErrors] = useState<RecordErrors>({});
   const [formError, setFormError] = useState<string | null>(null);
@@ -79,7 +81,7 @@ export function EditRecordPanel({ zoneId, zoneName, record, onDone }: EditRecord
         />
         <Box float="right">
           <SpaceBetween direction="horizontal" size="xs">
-            <Button formAction="none" variant="link" onClick={onDone}>
+            <Button formAction="none" variant="link" onClick={onCancel ?? onDone}>
               Cancel
             </Button>
             <Button variant="primary" formAction="submit" loading={update.isPending}>

@@ -17,7 +17,7 @@ import { useEffect, useState } from "react";
 import { InfoLink } from "@/components/common/InfoLink";
 import { useShell } from "@/components/layout/ShellContext";
 import { DeleteRecordsModal } from "@/components/records/DeleteRecordsModal";
-import { EditRecordPanel } from "@/components/records/EditRecordPanel";
+import { RecordPanel } from "@/components/records/RecordPanel";
 import { RecordsHelp } from "@/components/records/recordHelp";
 import { errorMessage } from "@/lib/apiErrors";
 import { displayName } from "@/lib/format";
@@ -65,6 +65,15 @@ const TYPE_FILTER_OPTIONS: SelectProps.Option[] = [
   ...RECORD_TYPES.map((info) => ({ value: info.type, label: info.type })),
 ];
 
+const ANY_ROUTING: SelectProps.Option = { value: "", label: "Any routing policy" };
+const ROUTING_FILTER_OPTIONS: SelectProps.Option[] = [ANY_ROUTING, { value: "simple", label: "Simple" }];
+const ANY_ALIAS: SelectProps.Option = { value: "", label: "Any alias" };
+const ALIAS_FILTER_OPTIONS: SelectProps.Option[] = [
+  ANY_ALIAS,
+  { value: "yes", label: "Alias: Yes" },
+  { value: "no", label: "Alias: No" },
+];
+
 const DEFAULT_PREFERENCES: CollectionPreferencesProps.Preferences = {
   pageSize: 10,
   wrapLines: true,
@@ -80,6 +89,8 @@ export function RecordsTable({ zone }: { zone: HostedZone }) {
   const [filteringText, setFilteringText] = useState("");
   const search = useDebouncedValue(filteringText.trim(), 300);
   const [typeFilter, setTypeFilter] = useState<SelectProps.Option>(ANY_TYPE);
+  const [routingFilter, setRoutingFilter] = useState<SelectProps.Option>(ANY_ROUTING);
+  const [aliasFilter, setAliasFilter] = useState<SelectProps.Option>(ANY_ALIAS);
   const [page, setPage] = useState(1);
   const [preferences, setPreferences] = useState(DEFAULT_PREFERENCES);
   const [selectedItems, setSelectedItems] = useState<RecordSet[]>([]);
@@ -89,13 +100,15 @@ export function RecordsTable({ zone }: { zone: HostedZone }) {
   const records = useRecords(zone.id, {
     search: search || undefined,
     type: (typeFilter.value || undefined) as RecordType | undefined,
+    routing_policy: (routingFilter.value || undefined) as "simple" | undefined,
     page,
     page_size: pageSize,
   });
-  const items = records.data?.items ?? [];
+  // Alias records are not supported, so "Alias: Yes" simply matches nothing.
+  const items = aliasFilter.value === "yes" ? [] : (records.data?.items ?? []);
   const total = records.data?.total ?? 0;
   const pagesCount = Math.max(1, Math.ceil(total / pageSize));
-  const filtered = Boolean(search || typeFilter.value);
+  const filtered = Boolean(search || typeFilter.value || routingFilter.value || aliasFilter.value);
   const editing = selectedItems.length === 1 ? selectedItems[0] : null;
 
   // Selecting exactly one record opens it for editing in the split panel.
@@ -105,14 +118,14 @@ export function RecordsTable({ zone }: { zone: HostedZone }) {
       return;
     }
     setSplitPanel({
-      header: `Edit record: ${displayName(editing.name)} (${editing.type})`,
+      header: `${displayName(editing.name)} (${editing.type})`,
       content: (
-        <EditRecordPanel
+        <RecordPanel
           key={editing.id}
           zoneId={zone.id}
           zoneName={zone.name}
           record={editing}
-          onDone={() => setSelectedItems([])}
+          onClose={() => setSelectedItems([])}
         />
       ),
     });
@@ -137,6 +150,8 @@ export function RecordsTable({ zone }: { zone: HostedZone }) {
           onClick={() => {
             setFilteringText("");
             setTypeFilter(ANY_TYPE);
+            setRoutingFilter(ANY_ROUTING);
+            setAliasFilter(ANY_ALIAS);
             resetPage();
           }}
         >
@@ -222,6 +237,24 @@ export function RecordsTable({ zone }: { zone: HostedZone }) {
               ariaLabel="Filter by record type"
               onChange={({ detail }) => {
                 setTypeFilter(detail.selectedOption);
+                resetPage();
+              }}
+            />
+            <Select
+              selectedOption={routingFilter}
+              options={ROUTING_FILTER_OPTIONS}
+              ariaLabel="Filter by routing policy"
+              onChange={({ detail }) => {
+                setRoutingFilter(detail.selectedOption);
+                resetPage();
+              }}
+            />
+            <Select
+              selectedOption={aliasFilter}
+              options={ALIAS_FILTER_OPTIONS}
+              ariaLabel="Filter by alias"
+              onChange={({ detail }) => {
+                setAliasFilter(detail.selectedOption);
                 resetPage();
               }}
             />

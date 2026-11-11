@@ -114,6 +114,7 @@ export interface RecordInput {
 export interface RecordListParams {
   search?: string;
   type?: RecordType;
+  routing_policy?: "simple";
   page?: number;
   page_size?: number;
 }

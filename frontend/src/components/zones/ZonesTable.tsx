@@ -170,7 +170,6 @@ export function ZonesTable() {
             variant="awsui-h1-sticky"
             counter={zones.data ? `(${total})` : undefined}
             info={<InfoLink topic="hosted zones" help={<HostedZonesHelp />} />}
-            description="Hosted zones are containers for records that define how traffic is routed for a domain and its subdomains."
             actions={
               <SpaceBetween direction="horizontal" size="xs">
                 <Button

@@ -50,3 +50,7 @@ playwright/.cache/
 .idea/
 .vscode/
 *.swp
+
+# --- Reference screenshots of the real AWS console (local comparison only, never published) ---
+docs/screenshots/reference/*
+!docs/screenshots/reference/README.md

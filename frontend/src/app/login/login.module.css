@@ -1,24 +1,168 @@
+/* Layout modelled on the console sign-in page: light page, centred mark, a sign-in card on
+   the left and an information panel on the right. All artwork here is plain CSS. */
 .page {
   min-height: 100vh;
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
-  padding: 64px 16px 32px;
   box-sizing: border-box;
-  background: #ffffff;
+  padding: 16px 24px 32px;
+  font-family: "Open Sans", "Helvetica Neue", Roboto, Arial, sans-serif;
+  background-color: #f7f7f7;
+  background-image: linear-gradient(135deg, rgba(0, 0, 0, 0.012) 25%, transparent 25%),
+    linear-gradient(225deg, rgba(0, 0, 0, 0.012) 25%, transparent 25%);
+  background-size: 220px 220px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
-.column {
+.topBar {
   width: 100%;
-  max-width: 420px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 32px;
+  font-size: 12px;
+  color: #0972d3;
 }
 
-/* A plain text mark drawn with CSS; the real AWS logo is not used. */
 .mark {
+  margin: 8px 0 28px;
   font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-  font-size: 40px;
+  font-size: 34px;
   font-weight: 700;
   letter-spacing: -1px;
   color: #232f3e;
+  /* An orange rule under the text instead of a logo image. */
+  border-bottom: 3px solid #ff9900;
+  line-height: 1;
+  padding-bottom: 2px;
+}
+
+.content {
+  display: flex;
+  gap: 24px;
+  align-items: flex-start;
+  justify-content: center;
+  width: 100%;
+  max-width: 940px;
+}
+
+.cardColumn {
+  width: 340px;
+  flex: none;
+}
+
+.card {
+  background: #ffffff;
+  border: 1px solid #d5dbdb;
+  border-radius: 16px;
+  padding: 20px 24px 24px;
+}
+
+.legal {
+  margin-top: 16px;
+  font-size: 12px;
+  line-height: 1.4;
+  color: #414d5c;
   text-align: center;
+}
+
+.panel {
+  flex: 1;
+  min-height: 350px;
+  border-radius: 4px;
+  padding: 40px;
+  box-sizing: border-box;
+  color: #ffffff;
+  background: linear-gradient(135deg, #3a1c9a 0%, #5b2ee0 45%, #8f3ff5 75%, #1a0d4a 100%);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 16px;
+}
+
+.panelTitle {
+  font-size: 30px;
+  line-height: 1.25;
+  font-weight: 500;
+  margin: 0;
+}
+
+.panelText {
+  font-size: 18px;
+  line-height: 1.4;
+  margin: 0;
+}
+
+.panelCreds {
+  font-size: 15px;
+  margin: 0;
+}
+
+.footer {
+  margin-top: auto;
+  padding-top: 32px;
+  font-size: 11px;
+  color: #414d5c;
+  text-align: center;
+}
+
+/* The console's orange "Next" / "Sign in" button. */
+.primary {
+  width: 100%;
+  border: none;
+  border-radius: 20px;
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 700;
+  font-family: inherit;
+  color: #000716;
+  background: #f5a33f;
+  cursor: pointer;
+}
+
+.primary:hover {
+  background: #ec8f1e;
+}
+
+.primary:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #414d5c;
+}
+
+.divider::before,
+.divider::after {
+  content: "";
+  flex: 1;
+  border-top: 1px solid #d5dbdb;
+}
+
+.secondary {
+  width: 100%;
+  border: 2px solid #0972d3;
+  border-radius: 20px;
+  padding: 6px 16px;
+  font-size: 14px;
+  font-weight: 700;
+  font-family: inherit;
+  color: #0972d3;
+  background: #ffffff;
+  cursor: not-allowed;
+}
+
+@media (max-width: 760px) {
+  .content {
+    flex-direction: column;
+    align-items: center;
+  }
+  .panel {
+    display: none;
+  }
 }

@@ -159,7 +159,20 @@ export function CreateRecords({ zoneId }: { zoneId: string }) {
           </SpaceBetween>
         }
       >
-        <Container header={<Header variant="h2">Quick create record</Header>}>
+        <Container
+          header={
+            <Header
+              variant="h2"
+              actions={
+                <Button formAction="none" disabled>
+                  Switch to wizard
+                </Button>
+              }
+            >
+              Quick create record
+            </Header>
+          }
+        >
           <SpaceBetween size="l">
             {rows.map((row, index) => (
               <Container

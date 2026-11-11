@@ -21,12 +21,16 @@ function renderForm() {
     </Providers>,
   );
   const wrapper = createWrapper(container);
+  // Field 0 is the user type tiles; then Account ID, IAM user name and Password.
   const fields = wrapper.findAllFormFields();
   return {
     wrapper,
-    username: fields[1].findControl()!.findInput()!,
-    password: fields[2].findControl()!.findInput()!,
-    submit: () => act(() => wrapper.findButton('[type="submit"]')!.click()),
+    username: fields[2].findControl()!.findInput()!,
+    password: fields[3].findControl()!.findInput()!,
+    submit: () =>
+      act(() => {
+        (container.querySelector('button[type="submit"]') as HTMLButtonElement).click();
+      }),
   };
 }
 
@@ -40,9 +44,20 @@ afterEach(() => {
 });
 
 describe("LoginForm", () => {
+  it("defaults to IAM user and blocks root sign-in", () => {
+    mockApi({});
+    const { wrapper } = renderForm();
+    expect(wrapper.findTiles()!.findInputByValue("iam")!.getElement()).toBeChecked();
+
+    act(() => wrapper.findTiles()!.findItemByValue("root")!.findNativeInput().click());
+
+    expect(wrapper.getElement()).toHaveTextContent("Choose IAM user to sign in to the demo account.");
+    expect(wrapper.getElement().querySelector('button[type="submit"]')).toBeDisabled();
+  });
+
   it("shows the mocked account ID read-only", () => {
     const { wrapper } = renderForm();
-    const accountInput = wrapper.findAllFormFields()[0].findControl()!.findInput()!;
+    const accountInput = wrapper.findAllFormFields()[1].findControl()!.findInput()!;
 
     expect(accountInput.getInputValue()).toBe("123456789012");
     expect(accountInput.findNativeInput().getElement()).toHaveAttribute("readonly");
@@ -55,7 +70,7 @@ describe("LoginForm", () => {
     submit();
 
     const errors = wrapper.findAllFormFields().map((f) => f.findError()?.getElement().textContent);
-    expect(errors).toEqual([undefined, "Enter your IAM user name.", "Enter your password."]);
+    expect(errors).toEqual([undefined, undefined, "Enter your IAM user name.", "Enter your password."]);
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
